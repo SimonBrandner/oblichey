@@ -1,0 +1,19 @@
+{
+	"[rust]": {
+		"editor.insertSpaces": false,
+		"editor.formatOnSave": true,
+		"rust-analyzer.checkOnSave.command": "clippy",
+		"editor.defaultFormatter": "rust-lang.rust-analyzer"
+	},
+	"[nix]": {
+		"editor.formatOnSave": true,
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2,
+		"editor.defaultFormatter": "jnoortheen.nix-ide"
+	},
+	"[jsonc]": {
+		"editor.insertSpaces": false,
+		"editor.formatOnSave": true,
+		"editor.defaultFormatter": "vscode.json-language-features"
+	}
+}
