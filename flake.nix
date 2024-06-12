@@ -1,5 +1,5 @@
 {
-  description = "A Rust Linux face authentication software";
+  description = "A Linux face authentication software built in Rust";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
