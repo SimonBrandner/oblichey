@@ -2,8 +2,15 @@
 name = "gday"
 version = "0.0.1"
 edition = "2021"
+build = "src/build.rs"
+
+[build-dependencies]
+burn-import = { path = "../burn/crates/burn-import" }
 
 [dependencies]
+burn = { path = "../burn/crates/burn" }
+burn-import = { path = "../burn/crates/burn-import" }
+burn-ndarray = { path = "../burn/crates/burn-ndarray" }
 
 [lints.rust]
 unsafe_code = "forbid"
