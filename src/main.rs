@@ -2,7 +2,8 @@ mod model;
 
 //use burn::tensor;
 //use burn_ndarray::{NdArray, NdArrayDevice};
-//use model::face::Model;
+//use model::detector::Model;
+//use model::recognizer::Model;
 
 fn main() {
 	println!("Hello, world!")
