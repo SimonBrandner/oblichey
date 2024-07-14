@@ -11,6 +11,7 @@ burn-import = { path = "../burn/crates/burn-import" }
 burn = { path = "../burn/crates/burn" }
 burn-import = { path = "../burn/crates/burn-import" }
 burn-ndarray = { path = "../burn/crates/burn-ndarray" }
+v4l = "0.14.0"
 
 [lints.rust]
 unsafe_code = "forbid"

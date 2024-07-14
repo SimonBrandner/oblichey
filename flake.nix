@@ -4,16 +4,20 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
   outputs = {
-    self,
     nixpkgs,
-  }: let
-    supportedSystems = ["x86_64-linux"];
-    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-    pkgsFor = nixpkgs.legacyPackages;
-  in {
-    packages = forAllSystems (system: {
-      default = pkgsFor.${system}.callPackage ./nix/package.nix {};
-    });
-    devShells.default = import ./nix/shell.nix {};
-  };
+    flake-utils,
+    ...
+  }: (
+    flake-utils.lib.eachDefaultSystem
+    (
+      system: let
+        pkgs = import nixpkgs {
+          inherit system;
+        };
+      in {
+        packages.default = nixpkgs.legacyPackages.${system}.callPackage ./nix/package.nix {};
+        devShells.default = import ./nix/shell.nix {inherit pkgs;};
+      }
+    )
+  );
 }
