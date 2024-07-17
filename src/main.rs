@@ -1,22 +1,49 @@
+mod camera;
 mod model;
+mod processor;
 
-//use burn::tensor;
-//use burn_ndarray::{NdArray, NdArrayDevice};
-//use model::detector::Model;
-//use model::recognizer::Model;
+use camera::Camera;
+use clap::Parser;
+use core::panic;
+use processor::Processor;
+
+#[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
+enum Command {
+	Auth,
+	Scan,
+	Test,
+	Remove,
+	List,
+}
+
+#[derive(clap::Parser, Debug)]
+struct Args {
+	#[arg(value_enum)]
+	command: Command,
+}
 
 fn main() {
-	println!("Hello, world!")
-	// Initialize a new model instance
-	//let device = NdArrayDevice::default();
-	//let model: Model<NdArray<f32>> = Model::new(&device);
-	//
-	//// Create a sample input tensor (zeros for demonstration)
-	//let input = tensor::Tensor::<NdArray<f32>, 4>::zeros([1, 1, 28, 28], &device);
-	//
-	//// Perform inference
-	//let output = model.forward(input);
+	let args = Args::parse();
+	let command = args.command;
 
-	// Print the output
-	//println!("{:?}", output);
+	if command != Command::Test {
+		panic!("Not implemented!");
+	}
+
+	let mut camera = match Camera::new() {
+		Ok(c) => c,
+		Err(e) => panic!("Failed cam {e}"),
+	};
+	let processor = Processor::new();
+
+	loop {
+		let frame_buffer = match camera.get_frame() {
+			Ok(b) => b,
+			Err(e) => {
+				println!("Failed to get frame: {e}");
+				continue;
+			}
+		};
+		let _state = processor.process_frame(&frame_buffer);
+	}
 }

@@ -1,0 +1,2 @@
+src/model/recognizer.onnx filter=lfs diff=lfs merge=lfs -text
+src/model/detector.onnx filter=lfs diff=lfs merge=lfs -text
