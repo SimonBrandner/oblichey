@@ -38,10 +38,11 @@ impl<'a> Camera<'a> {
 		let mut desired_format = device.format()?;
 		desired_format.width = 1280;
 		desired_format.height = 720;
-		desired_format.fourcc = FourCC::new(b"YUYV");
 
 		let actual_format = device.set_format(&desired_format)?;
-		if actual_format.to_string() != desired_format.to_string() {
+		if actual_format.width != desired_format.width
+			|| actual_format.height != desired_format.height
+		{
 			return Err(Error::Format(String::from(
 				"Failed to set the desired format",
 			)));
