@@ -1,4 +1,5 @@
 mod camera;
+mod gui;
 mod model;
 mod processor;
 
@@ -20,6 +21,9 @@ enum Command {
 struct Args {
 	#[arg(value_enum)]
 	command: Command,
+
+	#[arg(short, long, default_value = "true")]
+	gui: bool,
 }
 
 fn main() {
@@ -29,6 +33,11 @@ fn main() {
 	if command != Command::Test {
 		panic!("Not implemented!");
 	}
+
+	if args.gui {
+		gui::main();
+	}
+	return;
 
 	let mut camera = match Camera::new() {
 		Ok(c) => c,

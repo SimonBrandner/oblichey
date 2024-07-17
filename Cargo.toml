@@ -13,6 +13,10 @@ burn-import = { path = "../burn/crates/burn-import" }
 burn-ndarray = { path = "../burn/crates/burn-ndarray" }
 clap = { version = "4.4.11", features = ["derive"] }
 v4l = "0.14.0"
+eframe = { version = "0.20", default-features = false, features = [
+  "glow",
+  "default_fonts",
+] }
 
 [lints.rust]
 unsafe_code = "forbid"
