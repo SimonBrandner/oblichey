@@ -8,11 +8,13 @@ build = "src/build.rs"
 burn-import = { path = "../burn/crates/burn-import" }
 
 [dependencies]
+v4l = "0.14.0"
+chrono = "0.4.38"
 burn = { path = "../burn/crates/burn" }
 burn-import = { path = "../burn/crates/burn-import" }
 burn-ndarray = { path = "../burn/crates/burn-ndarray" }
 clap = { version = "4.4.11", features = ["derive"] }
-v4l = "0.14.0"
+image = { version = "0.24", default-features = false, features = ["jpeg"] }
 eframe = { version = "0.20", default-features = false, features = [
   "glow",
   "default_fonts",

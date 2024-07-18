@@ -3,6 +3,7 @@
 //use model::recognizer::Model;
 //use burn_ndarray::{ NdArrayDevice, NdArray };
 //use v4l::io::traits::Stream;
+use image::RgbaImage;
 
 #[derive(Debug, Clone)]
 struct FaceData;
@@ -40,7 +41,7 @@ impl Processor {
 		}
 	}
 
-	pub fn process_frame(&self, _frame_buffer: &[u8]) -> AuthenticatorState {
+	pub fn process_frame(&self, _frame_buffer: &RgbaImage) -> AuthenticatorState {
 		//let input = tensor::Tensor::<NdArray<f32>, 4>::zeros([1, 1, 28, 28], &device);
 		//let output = model.forward(input);
 
