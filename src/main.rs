@@ -43,7 +43,7 @@ fn main() {
 	};
 
 	if args.gui {
-		gui::main(camera);
+		gui::start(camera);
 	}
 
 	//let processor = Processor::new();

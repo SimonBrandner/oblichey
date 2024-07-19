@@ -7,7 +7,7 @@ use eframe::{
 	NativeOptions,
 };
 
-pub fn main(camera: Camera<'static>) {
+pub fn start(camera: Camera<'static>) {
 	eframe::run_native(
 		"GDay",
 		NativeOptions::default(),
