@@ -27,8 +27,6 @@ impl<'a> GUI<'a> {
 
 impl eframe::App for GUI<'_> {
 	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-		println!("Time: {}", Utc::now().to_string());
-
 		let image = match self.camera.get_frame() {
 			Ok(b) => b,
 			Err(e) => {
@@ -37,14 +35,13 @@ impl eframe::App for GUI<'_> {
 			}
 		};
 		let size = [image.width() as _, image.height() as _];
-		let egui_image =
-			ColorImage::from_rgba_unmultiplied(size, image.as_flat_samples().as_slice());
+		let egui_image = ColorImage::from_rgba_unmultiplied(size, &image.into_raw());
 
 		egui::CentralPanel::default().show(ctx, |ui| {
-			let tex = ui
-				.ctx()
-				.load_texture("frame", egui_image, egui::TextureOptions::LINEAR);
-			ui.image(&tex, ui.available_size());
+			let texture =
+				ui.ctx()
+					.load_texture("frame", egui_image, egui::TextureOptions::default());
+			ui.image(&texture, ui.available_size());
 		});
 		ctx.request_repaint();
 	}

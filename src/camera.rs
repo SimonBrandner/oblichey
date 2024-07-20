@@ -1,5 +1,4 @@
-use image::codecs::jpeg::JpegDecoder;
-use image::{DynamicImage, ImageError, RgbaImage};
+use image::{ImageBuffer, ImageError, Rgba};
 use std::fmt::Display;
 use std::io;
 use v4l::buffer::Type;
@@ -7,6 +6,8 @@ use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
 use v4l::video::Capture;
 use v4l::{Device, FourCC};
+
+use crate::utils::convert_yuyv_to_rgba;
 
 pub enum Error {
 	Io(io::Error),
@@ -47,7 +48,7 @@ impl<'a> Camera<'a> {
 		let mut desired_format = device.format()?;
 		desired_format.width = 1280;
 		desired_format.height = 720;
-		desired_format.fourcc = FourCC::new(b"MJPG");
+		desired_format.fourcc = FourCC::new(b"YUYV");
 
 		let actual_format = device.set_format(&desired_format)?;
 		if actual_format.width != desired_format.width
@@ -65,9 +66,9 @@ impl<'a> Camera<'a> {
 		})
 	}
 
-	pub fn get_frame(&mut self) -> Result<RgbaImage, Error> {
-		let (frame_buffer, _) = self.stream.next()?;
-		let decoder = JpegDecoder::new(frame_buffer)?;
-		Ok(DynamicImage::from_decoder(decoder)?.to_rgba8())
+	pub fn get_frame(&mut self) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
+		let (yuyv_frame_buffer, _) = self.stream.next()?;
+		let rgba_frame_buffer = convert_yuyv_to_rgba(yuyv_frame_buffer, 1280, 720);
+		Ok(rgba_frame_buffer)
 	}
 }

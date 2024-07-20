@@ -2,6 +2,7 @@ mod camera;
 mod gui;
 mod model;
 mod processor;
+mod utils;
 
 use camera::Camera;
 use clap::Parser;

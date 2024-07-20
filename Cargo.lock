@@ -388,6 +388,7 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 [[package]]
 name = "burn"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-core",
  "burn-train",
@@ -396,6 +397,7 @@ dependencies = [
 [[package]]
 name = "burn-autodiff"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-common",
  "burn-tensor",
@@ -407,6 +409,7 @@ dependencies = [
 [[package]]
 name = "burn-candle"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-tensor",
  "candle-core",
@@ -417,6 +420,7 @@ dependencies = [
 [[package]]
 name = "burn-common"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "data-encoding",
  "derive-new",
@@ -432,6 +436,7 @@ dependencies = [
 [[package]]
 name = "burn-compute"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "async-channel",
  "burn-common",
@@ -450,6 +455,7 @@ dependencies = [
 [[package]]
 name = "burn-core"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "bincode",
  "burn-autodiff",
@@ -479,6 +485,7 @@ dependencies = [
 [[package]]
 name = "burn-cube"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-compute",
  "burn-cube-macros",
@@ -494,6 +501,7 @@ dependencies = [
 [[package]]
 name = "burn-cube-macros"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "derive-new",
  "proc-macro2",
@@ -504,6 +512,7 @@ dependencies = [
 [[package]]
 name = "burn-dataset"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "csv",
  "derive-new",
@@ -528,6 +537,7 @@ dependencies = [
 [[package]]
 name = "burn-derive"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "derive-new",
  "proc-macro2",
@@ -538,6 +548,7 @@ dependencies = [
 [[package]]
 name = "burn-fusion"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-common",
  "burn-tensor",
@@ -551,6 +562,7 @@ dependencies = [
 [[package]]
 name = "burn-import"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn",
  "candle-core",
@@ -574,6 +586,7 @@ dependencies = [
 [[package]]
 name = "burn-jit"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-common",
  "burn-compute",
@@ -595,6 +608,7 @@ dependencies = [
 [[package]]
 name = "burn-ndarray"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-autodiff",
  "burn-common",
@@ -611,6 +625,7 @@ dependencies = [
 [[package]]
 name = "burn-tch"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-tensor",
  "half",
@@ -622,6 +637,7 @@ dependencies = [
 [[package]]
 name = "burn-tensor"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-common",
  "bytemuck",
@@ -632,12 +648,12 @@ dependencies = [
  "rand",
  "rand_distr",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
 name = "burn-train"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "burn-core",
  "crossterm",
@@ -656,6 +672,7 @@ dependencies = [
 [[package]]
 name = "burn-wgpu"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "async-channel",
  "burn-common",
@@ -2407,7 +2424,6 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "color_quant",
- "jpeg-decoder",
  "num-traits",
 ]
 
@@ -3313,6 +3329,7 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "onnx-ir"
 version = "0.14.0"
+source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
 dependencies = [
  "bytemuck",
  "half",
@@ -4102,15 +4119,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc76f558e0cbb2a839d37354c575f1dc3fdc6546b5be373ba43d95f231bf7c12"
 dependencies = [
  "serde_derive",
-]
-
-[[package]]
-name = "serde_bytes"
-version = "0.11.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "387cc504cb06bb40a96c8e04e951fe01854cf6bc921053c954e4a606d9675c6a"
-dependencies = [
- "serde",
 ]
 
 [[package]]
