@@ -1887,6 +1887,7 @@ dependencies = [
  "clap",
  "eframe",
  "image 0.24.9",
+ "rayon",
  "v4l",
 ]
 

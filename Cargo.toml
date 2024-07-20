@@ -19,6 +19,7 @@ eframe = { version = "0.20", default-features = false, features = [
   "glow",
   "default_fonts",
 ] }
+rayon = "1.10.0"
 
 [lints.rust]
 unsafe_code = "forbid"
