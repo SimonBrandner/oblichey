@@ -1,7 +1,4 @@
-use std::time::SystemTime;
-
 use crate::camera::Camera;
-use chrono::Utc;
 use eframe::{
 	egui::{self, ColorImage},
 	NativeOptions,
