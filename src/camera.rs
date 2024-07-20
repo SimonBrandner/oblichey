@@ -1,11 +1,14 @@
 use image::{ImageBuffer, ImageError, Rgba};
 use std::fmt::Display;
-use std::io;
+use std::{io, u32};
 use v4l::buffer::Type;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
 use v4l::video::Capture;
 use v4l::{Device, FourCC};
+
+const VIDEO_WIDTH: u32 = 1280;
+const VIDEO_HEIGHT: u32 = 720;
 
 use crate::utils::convert_yuyv_to_rgba;
 
@@ -46,8 +49,8 @@ impl<'a> Camera<'a> {
 		let mut device = Device::new(0)?;
 
 		let mut desired_format = device.format()?;
-		desired_format.width = 1280;
-		desired_format.height = 720;
+		desired_format.width = VIDEO_WIDTH;
+		desired_format.height = VIDEO_HEIGHT;
 		desired_format.fourcc = FourCC::new(b"YUYV");
 
 		let actual_format = device.set_format(&desired_format)?;
@@ -59,7 +62,6 @@ impl<'a> Camera<'a> {
 				"Failed to set the desired format",
 			)));
 		}
-		println!("{}", actual_format.fourcc);
 
 		Ok(Self {
 			stream: Stream::with_buffers(&mut device, Type::VideoCapture, 4)?,
@@ -68,7 +70,7 @@ impl<'a> Camera<'a> {
 
 	pub fn get_frame(&mut self) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
 		let (yuyv_frame_buffer, _) = self.stream.next()?;
-		let rgba_frame_buffer = convert_yuyv_to_rgba(yuyv_frame_buffer, 1280, 720);
+		let rgba_frame_buffer = convert_yuyv_to_rgba(yuyv_frame_buffer, VIDEO_WIDTH, VIDEO_HEIGHT);
 		Ok(rgba_frame_buffer)
 	}
 }
