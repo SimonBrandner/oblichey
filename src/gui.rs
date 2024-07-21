@@ -43,10 +43,6 @@ impl eframe::App for GUI<'_> {
 		let egui_image =
 			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.clone().into_raw());
 		let state = self.processor.process_frame(&image);
-		let state = match state {
-			ProcessorState::Auth(s) => s,
-			_ => panic!("Not implemented!"),
-		};
 
 		egui::CentralPanel::default().show(ctx, |ui| {
 			let texture =
