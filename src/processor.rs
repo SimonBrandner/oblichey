@@ -9,7 +9,16 @@ use image::RgbaImage;
 struct FaceData;
 
 #[derive(Debug, Clone)]
-struct FaceCoordinates;
+struct Coordinates {
+	x: usize,
+	y: usize,
+}
+
+#[derive(Debug, Clone)]
+struct FaceCoordinates {
+	location: Coordinates,
+	size: Coordinates,
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct ScanAuthenticatorState {

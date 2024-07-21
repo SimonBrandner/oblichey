@@ -1,24 +1,28 @@
-use crate::camera::{Camera, ImageSize};
+use crate::{
+	camera::{Camera, ImageSize},
+	processor::Processor,
+};
 use eframe::{
 	egui::{self, ColorImage},
 	NativeOptions,
 };
 
-pub fn start(camera: Camera<'static>) {
+pub fn start(camera: Camera<'static>, processor: Processor) {
 	eframe::run_native(
 		"GDay",
 		NativeOptions::default(),
-		Box::new(|_| Box::new(GUI::new(camera))),
+		Box::new(|_| Box::new(GUI::new(camera, processor))),
 	)
 }
 
 struct GUI<'a> {
 	camera: Camera<'a>,
+	processor: Processor,
 }
 
 impl<'a> GUI<'a> {
-	pub fn new(camera: Camera<'a>) -> Self {
-		Self { camera }
+	pub fn new(camera: Camera<'a>, processor: Processor) -> Self {
+		Self { camera, processor }
 	}
 }
 
@@ -32,7 +36,8 @@ impl eframe::App for GUI<'_> {
 			}
 		};
 		let egui_image =
-			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.into_raw());
+			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.clone().into_raw());
+		let _state = self.processor.process_frame(&image);
 
 		egui::CentralPanel::default().show(ctx, |ui| {
 			let texture =

@@ -1,13 +1,13 @@
 mod camera;
 mod gui;
 mod model;
+mod no_gui;
 mod processor;
 mod utils;
-
 use camera::Camera;
 use clap::Parser;
 use core::panic;
-//use processor::Processor;
+use processor::Processor;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
 enum Command {
@@ -39,23 +39,11 @@ fn main() {
 		Ok(c) => c,
 		Err(e) => panic!("Failed cam {e}"),
 	};
+	let processor = Processor::new();
 
 	if args.no_gui {
-		//let processor = Processor::new();
-
-		//loop {
-		//	let image = match camera.get_frame() {
-		//		Ok(b) => b,
-		//		Err(e) => {
-		//			println!("Failed to get frame: {e}");
-		//			return;
-		//		}
-		//	};
-		//
-		//	let _state = processor.process_frame(&image);
-		//}
-		return;
+		no_gui::start(camera, processor);
+	} else {
+		gui::start(camera, processor);
 	}
-
-	gui::start(camera);
 }
