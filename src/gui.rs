@@ -3,8 +3,7 @@ use crate::{
 	processor::{Processor, ProcessorState},
 };
 use eframe::{
-	egui::{self, Color32, ColorImage, Rounding, Shape, Stroke},
-	epaint::RectShape,
+	egui::{self, Color32, ColorImage, Rounding, Stroke},
 	NativeOptions,
 };
 
