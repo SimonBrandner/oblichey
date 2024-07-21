@@ -1,4 +1,4 @@
-use crate::camera::Camera;
+use crate::camera::{Camera, ImageSize};
 use eframe::{
 	egui::{self, ColorImage},
 	NativeOptions,
@@ -31,13 +31,13 @@ impl eframe::App for GUI<'_> {
 				return;
 			}
 		};
-		let size = [image.width() as _, image.height() as _];
-		let egui_image = ColorImage::from_rgba_unmultiplied(size, &image.into_raw());
+		let egui_image =
+			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.into_raw());
 
 		egui::CentralPanel::default().show(ctx, |ui| {
 			let texture =
 				ui.ctx()
-					.load_texture("frame", egui_image, egui::TextureOptions::default());
+					.load_texture("Camera", egui_image, egui::TextureOptions::default());
 			ui.image(&texture, ui.available_size());
 		});
 		ctx.request_repaint();

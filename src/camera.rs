@@ -1,3 +1,4 @@
+use crate::utils::convert_yuyv_to_rgba;
 use image::{ImageBuffer, ImageError, Rgba};
 use std::fmt::Display;
 use std::{io, u32};
@@ -10,12 +11,20 @@ use v4l::{Device, FourCC};
 const VIDEO_WIDTH: u32 = 1280;
 const VIDEO_HEIGHT: u32 = 720;
 
-use crate::utils::convert_yuyv_to_rgba;
-
 pub enum Error {
 	Io(io::Error),
 	Format(String),
 	Image(ImageError),
+}
+
+pub trait ImageSize {
+	fn get_size_array(&self) -> [usize; 2];
+}
+
+impl ImageSize for ImageBuffer<Rgba<u8>, Vec<u8>> {
+	fn get_size_array(&self) -> [usize; 2] {
+		[VIDEO_WIDTH as _, VIDEO_HEIGHT as _]
+	}
 }
 
 impl From<io::Error> for Error {
