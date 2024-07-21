@@ -1,10 +1,16 @@
 use crate::{
 	camera::{Camera, ImageSize},
-	processor::Processor,
+	processor::{Processor, ProcessorState},
 };
 use eframe::{
-	egui::{self, ColorImage},
+	egui::{self, Color32, ColorImage, Rounding, Shape, Stroke},
+	epaint::RectShape,
 	NativeOptions,
+};
+
+const FACE_RECTANGLE_STROKE: Stroke = Stroke {
+	width: 4.0,
+	color: Color32::from_rgb(255, 0, 0),
 };
 
 pub fn start(camera: Camera<'static>, processor: Processor) {
@@ -37,13 +43,25 @@ impl eframe::App for GUI<'_> {
 		};
 		let egui_image =
 			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.clone().into_raw());
-		let _state = self.processor.process_frame(&image);
+		let state = self.processor.process_frame(&image);
+		let state = match state {
+			ProcessorState::Auth(s) => s,
+			_ => panic!("Not implemented!"),
+		};
 
 		egui::CentralPanel::default().show(ctx, |ui| {
 			let texture =
 				ui.ctx()
 					.load_texture("Camera", egui_image, egui::TextureOptions::default());
 			ui.image(&texture, ui.available_size());
+
+			for face_coordinates in state.face_coordinates {
+				ui.painter().rect_stroke(
+					face_coordinates.to_rect(),
+					Rounding::default(),
+					FACE_RECTANGLE_STROKE,
+				);
+			}
 		});
 		ctx.request_repaint();
 	}
