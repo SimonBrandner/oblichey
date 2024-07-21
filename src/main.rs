@@ -39,7 +39,7 @@ fn main() {
 		Ok(c) => c,
 		Err(e) => panic!("Failed cam {e}"),
 	};
-	let processor = Processor::new();
+	let processor = Processor::new_test();
 
 	if args.no_gui {
 		no_gui::start(camera, processor);

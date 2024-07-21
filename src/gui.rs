@@ -1,6 +1,6 @@
 use crate::{
 	camera::{Camera, ImageSize},
-	processor::Processor,
+	processor::{ProcessState, Processor},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Rounding, Stroke},
@@ -43,6 +43,19 @@ impl eframe::App for GUI<'_> {
 		let egui_image =
 			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.clone().into_raw());
 		let state = self.processor.process_frame(&image);
+
+		match state.process_state {
+			ProcessState::Scan(s) => {
+				if let Some(_data) = s.data {
+					println!("Scanned")
+				}
+			}
+			ProcessState::Auth(s) => {
+				if s.authenticated {
+					println!("Authenticated")
+				}
+			}
+		}
 
 		egui::CentralPanel::default().show(ctx, |ui| {
 			let texture =

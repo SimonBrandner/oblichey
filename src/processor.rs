@@ -52,7 +52,7 @@ impl FaceCoordinates {
 
 #[derive(Debug, Clone, Default)]
 pub struct ScanProcessState {
-	pub date: Option<FaceData>,
+	pub data: Option<FaceData>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -77,7 +77,7 @@ pub struct Processor {
 }
 
 impl Processor {
-	pub fn new() -> Self {
+	pub fn new_test() -> Self {
 		//let device = NdArrayDevice::default();
 		//let model: Model<NdArray<f32>> = Model::new(&device);
 
