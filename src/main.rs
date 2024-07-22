@@ -1,16 +1,14 @@
 mod camera;
-mod embedding_processor;
-mod frame_processor;
-mod gui;
+mod main_loop;
 mod model;
-mod no_gui;
+mod processors;
 mod utils;
 
+use crate::main_loop::{gui, no_gui};
+use crate::processors::{embedding_processor::AuthProcessor, frame_processor::FrameProcessor};
 use camera::Camera;
 use clap::Parser;
 use core::panic;
-use embedding_processor::AuthProcessor;
-use frame_processor::FrameProcessor;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
 enum Command {

@@ -1,7 +1,6 @@
 use crate::{
 	camera::{Camera, ImageSize},
-	embedding_processor::EmbeddingProcessor,
-	frame_processor::FrameProcessor,
+	processors::{embedding_processor::EmbeddingProcessor, frame_processor::FrameProcessor},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Rounding, Stroke},

@@ -1,5 +1,6 @@
 use crate::{
-	camera::Camera, embedding_processor::EmbeddingProcessor, frame_processor::FrameProcessor,
+	camera::Camera,
+	processors::{embedding_processor::EmbeddingProcessor, frame_processor::FrameProcessor},
 };
 
 pub fn start(

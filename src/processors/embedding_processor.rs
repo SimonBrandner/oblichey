@@ -1,4 +1,4 @@
-use crate::frame_processor::Face;
+use super::frame_processor::Face;
 use std::fmt::Debug;
 
 pub trait EmbeddingProcessor: Debug {
