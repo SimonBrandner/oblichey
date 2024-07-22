@@ -1,8 +1,7 @@
-use std::rc::Rc;
-
 use crate::{
 	camera::{Camera, ImageSize},
-	processor::Processor,
+	embedding_processor::EmbeddingProcessor,
+	frame_processor::FrameProcessor,
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Rounding, Stroke},
@@ -14,22 +13,35 @@ const FACE_RECTANGLE_STROKE: Stroke = Stroke {
 	color: Color32::from_rgb(255, 0, 0),
 };
 
-pub fn start(camera: Camera<'static>, processor: Rc<Processor>) {
+pub fn start(
+	camera: Camera<'static>,
+	frame_processor: FrameProcessor,
+	embedding_processor: Box<dyn EmbeddingProcessor>,
+) {
 	eframe::run_native(
 		"Gday",
 		NativeOptions::default(),
-		Box::new(|_| Box::new(GUI::new(camera, processor))),
+		Box::new(|_| Box::new(GUI::new(camera, frame_processor, embedding_processor))),
 	)
 }
 
 struct GUI<'a> {
 	camera: Camera<'a>,
-	processor: Rc<Processor>,
+	frame_processor: FrameProcessor,
+	embedding_processor: Box<dyn EmbeddingProcessor>,
 }
 
 impl<'a> GUI<'a> {
-	pub fn new(camera: Camera<'a>, processor: Rc<Processor>) -> Self {
-		Self { camera, processor }
+	pub fn new(
+		camera: Camera<'a>,
+		frame_processor: FrameProcessor,
+		embedding_processor: Box<dyn EmbeddingProcessor>,
+	) -> Self {
+		Self {
+			camera,
+			frame_processor,
+			embedding_processor,
+		}
 	}
 }
 
@@ -43,9 +55,10 @@ impl eframe::App for GUI<'_> {
 			}
 		};
 
-		self.processor.process_frame(&image);
-		let state = self.processor.get_state();
-		if let Some(_) = self.processor.get_result() {
+		let frame_processor_state = self.frame_processor.process_frame(&image);
+		self.embedding_processor
+			.process_embeddings(&frame_processor_state.faces);
+		if self.embedding_processor.is_finished() {
 			frame.close();
 		}
 
@@ -59,9 +72,9 @@ impl eframe::App for GUI<'_> {
 					.load_texture("Camera", egui_image, egui::TextureOptions::default());
 
 			ui.image(&texture, ui.available_size());
-			for face_coordinates in state.face_coordinates {
+			for face in frame_processor_state.faces {
 				ui.painter().rect_stroke(
-					face_coordinates.to_rect(),
+					face.rectangle.to_rect(),
 					Rounding::default(),
 					FACE_RECTANGLE_STROKE,
 				);

@@ -1,13 +1,11 @@
 use eframe::egui::{Pos2, Rect};
 use image::RgbaImage;
 use std::ops::Add;
+
 //use burn::tensor;
 //use model::detector::Model;
 //use model::recognizer::Model;
 //use burn_ndarray::{ NdArrayDevice, NdArray };
-
-#[derive(Debug, Clone)]
-pub struct FaceData;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2D {
@@ -36,12 +34,12 @@ impl Vec2D {
 }
 
 #[derive(Debug, Clone)]
-pub struct FaceCoordinates {
+pub struct FaceRectangle {
 	pub position: Vec2D,
 	pub size: Vec2D,
 }
 
-impl FaceCoordinates {
+impl FaceRectangle {
 	pub fn to_rect(&self) -> Rect {
 		Rect {
 			min: self.position.to_pos2(),
@@ -50,59 +48,47 @@ impl FaceCoordinates {
 	}
 }
 
-#[derive(Debug, Clone)]
-pub struct ScanProcessState {
-	pub data: Option<FaceData>,
-}
+#[derive(Debug, Clone, Default)]
+pub struct FaceEmbedding;
 
 #[derive(Debug, Clone)]
-pub struct AuthProcessState {
-	pub authenticated: bool,
-}
-
-#[derive(Debug, Clone)]
-pub enum ProcessorResult {
-	Scan(ScanProcessState),
-	Auth(AuthProcessState),
+pub struct Face {
+	pub rectangle: FaceRectangle,
+	pub embedding: FaceEmbedding,
 }
 
 #[derive(Debug, Clone)]
 pub struct ProcessorState {
-	pub face_coordinates: Vec<FaceCoordinates>,
+	pub faces: Vec<Face>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Processor {
+#[derive(Debug)]
+pub struct FrameProcessor {
 	state: ProcessorState,
-	result: Option<ProcessorResult>,
 }
 
-impl Processor {
-	pub fn new_test() -> Self {
+impl FrameProcessor {
+	pub fn new() -> Self {
 		//let device = NdArrayDevice::default();
 		//let model: Model<NdArray<f32>> = Model::new(&device);
 
 		Self {
-			result: None,
 			state: ProcessorState {
-				face_coordinates: vec![FaceCoordinates {
-					position: Vec2D { x: 50, y: 100 },
-					size: Vec2D { x: 100, y: 150 },
+				faces: vec![Face {
+					embedding: FaceEmbedding::default(),
+					rectangle: FaceRectangle {
+						position: Vec2D { x: 50, y: 100 },
+						size: Vec2D { x: 100, y: 150 },
+					},
 				}],
 			},
 		}
 	}
 
-	pub fn process_frame(&self, _frame_buffer: &RgbaImage) {
+	pub fn process_frame(&self, _frame_buffer: &RgbaImage) -> ProcessorState {
 		//let input = tensor::Tensor::<NdArray<f32>, 4>::zeros([1, 1, 28, 28], &device);
 		//let output = model.forward(input);
-	}
 
-	pub fn get_state(&self) -> ProcessorState {
 		self.state.clone()
-	}
-
-	pub fn get_result(&self) -> Option<ProcessorResult> {
-		self.result.clone()
 	}
 }

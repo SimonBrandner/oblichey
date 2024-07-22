@@ -1,7 +1,12 @@
-use crate::{camera::Camera, processor::Processor};
-use std::rc::Rc;
+use crate::{
+	camera::Camera, embedding_processor::EmbeddingProcessor, frame_processor::FrameProcessor,
+};
 
-pub fn start(mut camera: Camera, processor: Rc<Processor>) {
+pub fn start(
+	mut camera: Camera,
+	frame_processor: FrameProcessor,
+	embedding_processor: Box<dyn EmbeddingProcessor>,
+) {
 	loop {
 		let image = match camera.get_frame() {
 			Ok(b) => b,
@@ -10,9 +15,10 @@ pub fn start(mut camera: Camera, processor: Rc<Processor>) {
 				return;
 			}
 		};
+		let frame_processor_state = frame_processor.process_frame(&image);
+		embedding_processor.process_embeddings(&frame_processor_state.faces);
 
-		processor.process_frame(&image);
-		if let Some(_) = processor.get_result() {
+		if embedding_processor.is_finished() {
 			return;
 		}
 	}

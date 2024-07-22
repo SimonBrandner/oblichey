@@ -1,14 +1,16 @@
 mod camera;
+mod embedding_processor;
+mod frame_processor;
 mod gui;
 mod model;
 mod no_gui;
-mod processor;
 mod utils;
+
 use camera::Camera;
 use clap::Parser;
 use core::panic;
-use processor::{Processor, ProcessorResult};
-use std::rc::Rc;
+use embedding_processor::AuthProcessor;
+use frame_processor::FrameProcessor;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
 enum Command {
@@ -40,24 +42,13 @@ fn main() {
 		Ok(c) => c,
 		Err(e) => panic!("Failed construct camera: {e}"),
 	};
-	let processor = Rc::new(Processor::new_test());
+
+	let embedding_processor = Box::new(AuthProcessor::new());
+	let frame_processor = FrameProcessor::new();
 
 	if args.no_gui {
-		no_gui::start(camera, processor.clone());
+		no_gui::start(camera, frame_processor, embedding_processor);
 	} else {
-		gui::start(camera, processor.clone());
-	}
-
-	let state = match processor.get_result() {
-		Some(s) => s,
-		None => panic!("Result is None"),
-	};
-	match state {
-		ProcessorResult::Scan(_s) => {
-			todo!("Save data")
-		}
-		ProcessorResult::Auth(_s) => {
-			todo!("Do something with PAM")
-		}
+		gui::start(camera, frame_processor, embedding_processor);
 	}
 }
