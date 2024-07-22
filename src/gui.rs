@@ -46,19 +46,6 @@ impl eframe::App for GUI<'_> {
 			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.clone().into_raw());
 		let state = self.processor.process_frame(&image);
 
-		match state.process_state {
-			ProcessorResult::Scan(s) => {
-				if let Some(_data) = s.data {
-					println!("Scanned")
-				}
-			}
-			ProcessorResult::Auth(s) => {
-				if s.authenticated {
-					println!("Authenticated")
-				}
-			}
-		}
-
 		egui::CentralPanel::default().show(ctx, |ui| {
 			let texture =
 				ui.ctx()
