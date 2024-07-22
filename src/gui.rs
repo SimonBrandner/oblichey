@@ -1,6 +1,8 @@
+use std::rc::Rc;
+
 use crate::{
 	camera::{Camera, ImageSize},
-	processor::{ProcessState, Processor},
+	processor::{Processor, ProcessorResult},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Rounding, Stroke},
@@ -12,7 +14,7 @@ const FACE_RECTANGLE_STROKE: Stroke = Stroke {
 	color: Color32::from_rgb(255, 0, 0),
 };
 
-pub fn start(camera: Camera<'static>, processor: Processor) {
+pub fn start(camera: Camera<'static>, processor: Rc<Processor>) {
 	eframe::run_native(
 		"GDay",
 		NativeOptions::default(),
@@ -22,11 +24,11 @@ pub fn start(camera: Camera<'static>, processor: Processor) {
 
 struct GUI<'a> {
 	camera: Camera<'a>,
-	processor: Processor,
+	processor: Rc<Processor>,
 }
 
 impl<'a> GUI<'a> {
-	pub fn new(camera: Camera<'a>, processor: Processor) -> Self {
+	pub fn new(camera: Camera<'a>, processor: Rc<Processor>) -> Self {
 		Self { camera, processor }
 	}
 }
@@ -45,12 +47,12 @@ impl eframe::App for GUI<'_> {
 		let state = self.processor.process_frame(&image);
 
 		match state.process_state {
-			ProcessState::Scan(s) => {
+			ProcessorResult::Scan(s) => {
 				if let Some(_data) = s.data {
 					println!("Scanned")
 				}
 			}
-			ProcessState::Auth(s) => {
+			ProcessorResult::Auth(s) => {
 				if s.authenticated {
 					println!("Authenticated")
 				}

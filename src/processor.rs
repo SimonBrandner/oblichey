@@ -50,18 +50,18 @@ impl FaceCoordinates {
 	}
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ScanProcessState {
 	pub data: Option<FaceData>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct AuthProcessState {
 	pub authenticated: bool,
 }
 
 #[derive(Debug, Clone)]
-pub enum ProcessState {
+pub enum ProcessorResult {
 	Scan(ScanProcessState),
 	Auth(AuthProcessState),
 }
@@ -69,11 +69,12 @@ pub enum ProcessState {
 #[derive(Debug, Clone)]
 pub struct ProcessorState {
 	pub face_coordinates: Vec<FaceCoordinates>,
-	pub process_state: ProcessState,
 }
 
+#[derive(Debug, Clone)]
 pub struct Processor {
 	state: ProcessorState,
+	result: Option<ProcessorResult>,
 }
 
 impl Processor {
@@ -82,14 +83,12 @@ impl Processor {
 		//let model: Model<NdArray<f32>> = Model::new(&device);
 
 		Self {
+			result: None,
 			state: ProcessorState {
 				face_coordinates: vec![FaceCoordinates {
 					position: Vec2D { x: 50, y: 100 },
 					size: Vec2D { x: 100, y: 150 },
 				}],
-				process_state: ProcessState::Auth(AuthProcessState {
-					authenticated: false,
-				}),
 			},
 		}
 	}
@@ -99,5 +98,9 @@ impl Processor {
 		//let output = model.forward(input);
 
 		self.state.clone()
+	}
+
+	pub fn get_result(&self) -> Option<ProcessorResult> {
+		self.result.clone()
 	}
 }

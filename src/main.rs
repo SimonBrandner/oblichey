@@ -8,6 +8,7 @@ use camera::Camera;
 use clap::Parser;
 use core::panic;
 use processor::Processor;
+use std::rc::Rc;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
 enum Command {
@@ -39,11 +40,13 @@ fn main() {
 		Ok(c) => c,
 		Err(e) => panic!("Failed cam {e}"),
 	};
-	let processor = Processor::new_test();
+	let processor = Rc::new(Processor::new_test());
 
 	if args.no_gui {
-		no_gui::start(camera, processor);
+		no_gui::start(camera, processor.clone());
 	} else {
-		gui::start(camera, processor);
+		gui::start(camera, processor.clone());
 	}
+
+	let _state = processor.get_result();
 }
