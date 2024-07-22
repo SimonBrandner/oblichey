@@ -16,7 +16,7 @@ const FACE_RECTANGLE_STROKE: Stroke = Stroke {
 
 pub fn start(camera: Camera<'static>, processor: Rc<Processor>) {
 	eframe::run_native(
-		"GDay",
+		"Gday",
 		NativeOptions::default(),
 		Box::new(|_| Box::new(GUI::new(camera, processor))),
 	)
