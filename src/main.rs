@@ -7,7 +7,7 @@ mod utils;
 use camera::Camera;
 use clap::Parser;
 use core::panic;
-use processor::Processor;
+use processor::{Processor, ProcessorResult};
 use std::rc::Rc;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
@@ -48,5 +48,16 @@ fn main() {
 		gui::start(camera, processor.clone());
 	}
 
-	let _result = processor.get_result();
+	let state = match processor.get_result() {
+		Some(s) => s,
+		None => panic!("Result is None"),
+	};
+	match state {
+		ProcessorResult::Scan(_s) => {
+			todo!("Save data")
+		}
+		ProcessorResult::Auth(_s) => {
+			todo!("Do something with PAM")
+		}
+	}
 }
