@@ -93,10 +93,12 @@ impl Processor {
 		}
 	}
 
-	pub fn process_frame(&self, _frame_buffer: &RgbaImage) -> ProcessorState {
+	pub fn process_frame(&self, _frame_buffer: &RgbaImage) {
 		//let input = tensor::Tensor::<NdArray<f32>, 4>::zeros([1, 1, 28, 28], &device);
 		//let output = model.forward(input);
+	}
 
+	pub fn get_state(&self) -> ProcessorState {
 		self.state.clone()
 	}
 

@@ -48,5 +48,5 @@ fn main() {
 		gui::start(camera, processor.clone());
 	}
 
-	let _state = processor.get_result();
+	let _result = processor.get_result();
 }

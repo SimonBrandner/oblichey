@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{
 	camera::{Camera, ImageSize},
-	processor::{Processor, ProcessorResult},
+	processor::Processor,
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Rounding, Stroke},
@@ -34,7 +34,7 @@ impl<'a> GUI<'a> {
 }
 
 impl eframe::App for GUI<'_> {
-	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 		let image = match self.camera.get_frame() {
 			Ok(b) => b,
 			Err(e) => {
@@ -42,16 +42,23 @@ impl eframe::App for GUI<'_> {
 				return;
 			}
 		};
-		let egui_image =
-			ColorImage::from_rgba_unmultiplied(image.get_size_array(), &image.clone().into_raw());
-		let state = self.processor.process_frame(&image);
+
+		self.processor.process_frame(&image);
+		let state = self.processor.get_state();
+		if let Some(_) = self.processor.get_result() {
+			frame.close();
+		}
 
 		egui::CentralPanel::default().show(ctx, |ui| {
+			let egui_image = ColorImage::from_rgba_unmultiplied(
+				image.get_size_array(),
+				&image.clone().into_raw(),
+			);
 			let texture =
 				ui.ctx()
 					.load_texture("Camera", egui_image, egui::TextureOptions::default());
-			ui.image(&texture, ui.available_size());
 
+			ui.image(&texture, ui.available_size());
 			for face_coordinates in state.face_coordinates {
 				ui.painter().rect_stroke(
 					face_coordinates.to_rect(),

@@ -11,6 +11,9 @@ pub fn start(mut camera: Camera, processor: Rc<Processor>) {
 			}
 		};
 
-		let _state = processor.process_frame(&image);
+		processor.process_frame(&image);
+		if let Some(_) = processor.get_result() {
+			return;
+		}
 	}
 }
