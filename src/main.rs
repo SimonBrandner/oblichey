@@ -38,7 +38,7 @@ fn main() {
 
 	let camera = match Camera::new() {
 		Ok(c) => c,
-		Err(e) => panic!("Failed cam {e}"),
+		Err(e) => panic!("Failed construct camera: {e}"),
 	};
 	let processor = Rc::new(Processor::new_test());
 
