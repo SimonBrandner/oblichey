@@ -62,12 +62,15 @@ impl eframe::App for GUI<'_> {
 		}
 
 		egui::CentralPanel::default().show(ctx, |ui| {
-			let egui_image = ColorImage::from_rgb(image.get_size_array(), &image.into_raw());
-			let texture =
+			let image_size_vec2 = image.get_size_vec2();
+			let image_size_array = image.get_size_array();
+			let image_raw = &image.into_raw();
+			let egui_image = ColorImage::from_rgb(image_size_array, image_raw);
+			let image_texture =
 				ui.ctx()
 					.load_texture("Camera", egui_image, egui::TextureOptions::default());
 
-			ui.image(&texture, ui.available_size());
+			ui.image(&image_texture, image_size_vec2);
 			for face in frame_processor_state.faces {
 				ui.painter().rect_stroke(
 					face.rectangle.to_rect(),

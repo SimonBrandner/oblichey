@@ -1,4 +1,5 @@
 use crate::utils::convert_yuyv_to_rgb;
+use eframe::egui::Vec2;
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
 use std::{io, u32};
@@ -20,11 +21,15 @@ pub enum Error {
 
 pub trait ImageSize {
 	fn get_size_array(&self) -> [usize; 2];
+	fn get_size_vec2(&self) -> Vec2;
 }
 
 impl ImageSize for ImageBuffer<Rgb<u8>, Vec<u8>> {
 	fn get_size_array(&self) -> [usize; 2] {
 		[VIDEO_WIDTH as _, VIDEO_HEIGHT as _]
+	}
+	fn get_size_vec2(&self) -> Vec2 {
+		Vec2::new(VIDEO_WIDTH as f32, VIDEO_HEIGHT as f32)
 	}
 }
 
