@@ -5,16 +5,16 @@ edition = "2021"
 build = "src/build.rs"
 
 [build-dependencies]
-burn-import = { git = "https://github.com/skewballfox/burn", branch = "legacy_initializer_fix" }
+burn-import = { git = "https://github.com/tracel-ai/burn", branch = "main" }
 
 [dependencies]
 v4l = "0.14.0"
 chrono = "0.4.38"
 clap = { version = "4.4.11", features = ["derive"] }
 image = { version = "0.24", default-features = false }
-burn = { git = "https://github.com/skewballfox/burn", branch = "legacy_initializer_fix" }
-burn-ndarray = { git = "https://github.com/skewballfox/burn", branch = "legacy_initializer_fix" }
-burn-import = { git = "https://github.com/skewballfox/burn", branch = "legacy_initializer_fix" }
+burn = { git = "https://github.com/tracel-ai/burn", branch = "main" }
+burn-ndarray = { git = "https://github.com/tracel-ai/burn", branch = "main" }
+burn-import = { git = "https://github.com/tracel-ai/burn", branch = "main" }
 eframe = { version = "0.20", default-features = false, features = [
   "glow",
   "default_fonts",

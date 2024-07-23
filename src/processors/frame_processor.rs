@@ -1,11 +1,9 @@
+use crate::model::detector;
+use burn::tensor::Tensor;
+use burn_ndarray::{NdArray, NdArrayDevice};
 use eframe::egui::{Pos2, Rect};
 use image::RgbaImage;
 use std::ops::Add;
-
-//use burn::tensor;
-//use model::detector::Model;
-//use model::recognizer::Model;
-//use burn_ndarray::{ NdArrayDevice, NdArray };
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2D {
@@ -64,31 +62,30 @@ pub struct ProcessorState {
 
 #[derive(Debug)]
 pub struct FrameProcessor {
-	state: ProcessorState,
+	device: NdArrayDevice,
+	detector: detector::Model<NdArray<f32>>,
 }
 
 impl FrameProcessor {
 	pub fn new() -> Self {
-		//let device = NdArrayDevice::default();
-		//let model: Model<NdArray<f32>> = Model::new(&device);
+		let device = NdArrayDevice::default();
+		let detector: detector::Model<NdArray<f32>> = detector::Model::default();
 
-		Self {
-			state: ProcessorState {
-				faces: vec![Face {
-					embedding: FaceEmbedding::default(),
-					rectangle: FaceRectangle {
-						position: Vec2D { x: 50, y: 100 },
-						size: Vec2D { x: 100, y: 150 },
-					},
-				}],
-			},
-		}
+		Self { device, detector }
 	}
 
 	pub fn process_frame(&self, _frame_buffer: &RgbaImage) -> ProcessorState {
-		//let input = tensor::Tensor::<NdArray<f32>, 4>::zeros([1, 1, 28, 28], &device);
-		//let output = model.forward(input);
+		//let input = Tensor::ones([1, 3, 480, 640], &self.device);
+		//let (scores, boxes) = self.detector.forward(input);
 
-		self.state.clone()
+		ProcessorState {
+			faces: vec![Face {
+				embedding: FaceEmbedding::default(),
+				rectangle: FaceRectangle {
+					position: Vec2D { x: 50, y: 100 },
+					size: Vec2D { x: 100, y: 150 },
+				},
+			}],
+		}
 	}
 }

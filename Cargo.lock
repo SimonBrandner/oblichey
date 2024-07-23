@@ -388,7 +388,7 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 [[package]]
 name = "burn"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-core",
  "burn-train",
@@ -397,7 +397,7 @@ dependencies = [
 [[package]]
 name = "burn-autodiff"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-common",
  "burn-tensor",
@@ -409,7 +409,7 @@ dependencies = [
 [[package]]
 name = "burn-candle"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-tensor",
  "candle-core",
@@ -420,42 +420,19 @@ dependencies = [
 [[package]]
 name = "burn-common"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
+ "cubecl-common",
  "data-encoding",
- "derive-new",
  "getrandom",
- "pollster",
- "rand",
  "rayon",
- "serde",
- "spin",
- "web-time",
-]
-
-[[package]]
-name = "burn-compute"
-version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
-dependencies = [
- "async-channel",
- "burn-common",
- "derive-new",
- "dirs",
- "hashbrown 0.14.5",
- "log",
- "md5",
- "pollster",
- "serde",
- "serde_json",
- "spin",
  "web-time",
 ]
 
 [[package]]
 name = "burn-core"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "bincode",
  "burn-autodiff",
@@ -483,36 +460,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "burn-cube"
-version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
-dependencies = [
- "burn-compute",
- "burn-cube-macros",
- "burn-tensor",
- "bytemuck",
- "derive-new",
- "half",
- "log",
- "num-traits",
- "serde",
-]
-
-[[package]]
-name = "burn-cube-macros"
-version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
-dependencies = [
- "derive-new",
- "proc-macro2",
- "quote",
- "syn 2.0.71",
-]
-
-[[package]]
 name = "burn-dataset"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "csv",
  "derive-new",
@@ -537,7 +487,7 @@ dependencies = [
 [[package]]
 name = "burn-derive"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "derive-new",
  "proc-macro2",
@@ -548,7 +498,7 @@ dependencies = [
 [[package]]
 name = "burn-fusion"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-common",
  "burn-tensor",
@@ -562,7 +512,7 @@ dependencies = [
 [[package]]
 name = "burn-import"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn",
  "candle-core",
@@ -586,14 +536,13 @@ dependencies = [
 [[package]]
 name = "burn-jit"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-common",
- "burn-compute",
- "burn-cube",
  "burn-fusion",
  "burn-tensor",
  "bytemuck",
+ "cubecl",
  "derive-new",
  "half",
  "hashbrown 0.14.5",
@@ -608,7 +557,7 @@ dependencies = [
 [[package]]
 name = "burn-ndarray"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-autodiff",
  "burn-common",
@@ -625,7 +574,7 @@ dependencies = [
 [[package]]
 name = "burn-tch"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-tensor",
  "half",
@@ -637,10 +586,11 @@ dependencies = [
 [[package]]
 name = "burn-tensor"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-common",
  "bytemuck",
+ "cubecl",
  "derive-new",
  "half",
  "hashbrown 0.14.5",
@@ -648,12 +598,13 @@ dependencies = [
  "rand",
  "rand_distr",
  "serde",
+ "serde_bytes",
 ]
 
 [[package]]
 name = "burn-train"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "burn-core",
  "crossterm",
@@ -672,21 +623,12 @@ dependencies = [
 [[package]]
 name = "burn-wgpu"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
- "async-channel",
- "burn-common",
- "burn-compute",
- "burn-cube",
  "burn-fusion",
  "burn-jit",
  "burn-tensor",
- "bytemuck",
- "derive-new",
- "hashbrown 0.14.5",
- "log",
- "pollster",
- "wgpu",
+ "cubecl",
 ]
 
 [[package]]
@@ -770,9 +712,9 @@ dependencies = [
 
 [[package]]
 name = "candle-core"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "311d8dbe293aa3b5c34f6a57727fafd67d17a74fa8b65276501237c233b34ffd"
+checksum = "d5b18de020c2729dbf7ac390325312644808b6ba9b7962f1f724e9185b1d53c7"
 dependencies = [
  "byteorder",
  "gemm",
@@ -1319,6 +1261,128 @@ name = "cty"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
+
+[[package]]
+name = "cubecl"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "cubecl-core",
+ "cubecl-cuda",
+ "cubecl-linalg",
+ "cubecl-wgpu",
+]
+
+[[package]]
+name = "cubecl-common"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "derive-new",
+ "getrandom",
+ "pollster",
+ "rand",
+ "serde",
+ "spin",
+ "web-time",
+]
+
+[[package]]
+name = "cubecl-core"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "bytemuck",
+ "cubecl-macros",
+ "cubecl-runtime",
+ "derive-new",
+ "half",
+ "log",
+ "num-traits",
+ "serde",
+]
+
+[[package]]
+name = "cubecl-cuda"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "bytemuck",
+ "cubecl-common",
+ "cubecl-core",
+ "cubecl-runtime",
+ "cudarc",
+ "derive-new",
+ "half",
+ "log",
+]
+
+[[package]]
+name = "cubecl-linalg"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "bytemuck",
+ "cubecl-core",
+ "cubecl-runtime",
+ "half",
+]
+
+[[package]]
+name = "cubecl-macros"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "derive-new",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.71",
+]
+
+[[package]]
+name = "cubecl-runtime"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "async-channel",
+ "cubecl-common",
+ "derive-new",
+ "dirs",
+ "hashbrown 0.14.5",
+ "log",
+ "md5",
+ "pollster",
+ "serde",
+ "serde_json",
+ "spin",
+ "web-time",
+]
+
+[[package]]
+name = "cubecl-wgpu"
+version = "0.1.1"
+source = "git+https://github.com/tracel-ai/cubecl#c35c42484b28a68383ff3245519d237703bfc708"
+dependencies = [
+ "async-channel",
+ "bytemuck",
+ "cubecl-common",
+ "cubecl-core",
+ "cubecl-runtime",
+ "derive-new",
+ "hashbrown 0.14.5",
+ "log",
+ "pollster",
+ "wgpu",
+]
+
+[[package]]
+name = "cudarc"
+version = "0.11.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e395cd01168d63af826749573071f3c5069b338ae473cab355d22db0b2bb5a0d"
+dependencies = [
+ "libloading 0.8.3",
+]
 
 [[package]]
 name = "d3d12"
@@ -2066,10 +2130,11 @@ dependencies = [
 
 [[package]]
 name = "gix-fs"
-version = "0.10.2"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2184c40e7910529677831c8b481acf788ffd92427ed21fad65b6aa637e631b8"
+checksum = "c3338ff92a2164f5209f185ec0cd316f571a72676bb01d27e22f2867ba69f77a"
 dependencies = [
+ "fastrand",
  "gix-features",
  "gix-utils",
 ]
@@ -2086,9 +2151,9 @@ dependencies = [
 
 [[package]]
 name = "gix-tempfile"
-version = "13.1.1"
+version = "14.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a761d76594f4443b675e85928e4902dec333273836bd386906f01e7e346a0d11"
+checksum = "d3b0e276cd08eb2a22e9f286a4f13a222a01be2defafa8621367515375644b99"
 dependencies = [
  "dashmap",
  "gix-fs",
@@ -3330,7 +3395,7 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "onnx-ir"
 version = "0.14.0"
-source = "git+https://github.com/skewballfox/burn?branch=legacy_initializer_fix#d14e5f2a21f6cd7514ae4fd51cdcf613aa0158a7"
+source = "git+https://github.com/tracel-ai/burn?branch=main#4c7353230ea8cfba5864d7ecb69493e8da849d4a"
 dependencies = [
  "bytemuck",
  "half",
@@ -4123,6 +4188,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_bytes"
+version = "0.11.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "387cc504cb06bb40a96c8e04e951fe01854cf6bc921053c954e4a606d9675c6a"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.204"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4439,9 +4513,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.30.12"
+version = "0.30.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "732ffa00f53e6b2af46208fba5718d9662a421049204e156328b66791ffa15ae"
+checksum = "0a5b4ddaee55fb2bea2bf0e5000747e5f5c0de765e5a5ff87f4cd106439f4bb3"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
