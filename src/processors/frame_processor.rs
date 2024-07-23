@@ -1,9 +1,11 @@
 //use burn::tensor::Tensor;
-use crate::model::detector;
+use crate::model::{self, detector, recognizer};
 use burn_ndarray::{NdArray, NdArrayDevice};
 use eframe::egui::{Pos2, Rect};
 use image::RgbImage;
 use std::ops::Add;
+
+type Backend = NdArray<f32>;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2D {
@@ -63,15 +65,21 @@ pub struct ProcessorState {
 #[derive(Debug)]
 pub struct FrameProcessor {
 	device: NdArrayDevice,
-	detector: detector::Model<NdArray<f32>>,
+	detector: detector::Model<Backend>,
+	recognizer: recognizer::Model<Backend>,
 }
 
 impl FrameProcessor {
 	pub fn new() -> Self {
 		let device = NdArrayDevice::default();
-		let detector: detector::Model<NdArray<f32>> = detector::Model::default();
+		let detector: detector::Model<Backend> = detector::Model::default();
+		let recognizer: recognizer::Model<Backend> = recognizer::Model::default();
 
-		Self { device, detector }
+		Self {
+			device,
+			detector,
+			recognizer,
+		}
 	}
 
 	pub fn process_frame(&self, _frame_buffer: &RgbImage) -> ProcessorState {
