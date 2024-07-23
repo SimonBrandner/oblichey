@@ -1,8 +1,8 @@
+//use burn::tensor::Tensor;
 use crate::model::detector;
-use burn::tensor::Tensor;
 use burn_ndarray::{NdArray, NdArrayDevice};
 use eframe::egui::{Pos2, Rect};
-use image::RgbaImage;
+use image::RgbImage;
 use std::ops::Add;
 
 #[derive(Debug, Clone, Copy)]
@@ -74,7 +74,7 @@ impl FrameProcessor {
 		Self { device, detector }
 	}
 
-	pub fn process_frame(&self, _frame_buffer: &RgbaImage) -> ProcessorState {
+	pub fn process_frame(&self, _frame_buffer: &RgbImage) -> ProcessorState {
 		//let input = Tensor::ones([1, 3, 480, 640], &self.device);
 		//let (scores, boxes) = self.detector.forward(input);
 

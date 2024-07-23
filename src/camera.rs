@@ -1,5 +1,5 @@
-use crate::utils::convert_yuyv_to_rgba;
-use image::{ImageBuffer, ImageError, Rgba};
+use crate::utils::convert_yuyv_to_rgb;
+use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
 use std::{io, u32};
 use v4l::buffer::Type;
@@ -21,7 +21,7 @@ pub trait ImageSize {
 	fn get_size_array(&self) -> [usize; 2];
 }
 
-impl ImageSize for ImageBuffer<Rgba<u8>, Vec<u8>> {
+impl ImageSize for ImageBuffer<Rgb<u8>, Vec<u8>> {
 	fn get_size_array(&self) -> [usize; 2] {
 		[VIDEO_WIDTH as _, VIDEO_HEIGHT as _]
 	}
@@ -77,9 +77,9 @@ impl<'a> Camera<'a> {
 		})
 	}
 
-	pub fn get_frame(&mut self) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
+	pub fn get_frame(&mut self) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Error> {
 		let (yuyv_frame_buffer, _) = self.stream.next()?;
-		let rgba_frame_buffer = convert_yuyv_to_rgba(yuyv_frame_buffer, VIDEO_WIDTH, VIDEO_HEIGHT);
-		Ok(rgba_frame_buffer)
+		let rgb_frame_buffer = convert_yuyv_to_rgb(yuyv_frame_buffer, VIDEO_WIDTH, VIDEO_HEIGHT);
+		Ok(rgb_frame_buffer)
 	}
 }
