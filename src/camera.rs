@@ -8,8 +8,9 @@ use v4l::io::traits::CaptureStream;
 use v4l::video::Capture;
 use v4l::{Device, FourCC};
 
-const VIDEO_WIDTH: u32 = 1280;
-const VIDEO_HEIGHT: u32 = 720;
+const VIDEO_WIDTH: u32 = 640;
+const VIDEO_HEIGHT: u32 = 480;
+const FOUR_CC: &[u8; 4] = b"YUYV";
 
 pub enum Error {
 	Io(io::Error),
@@ -60,7 +61,7 @@ impl<'a> Camera<'a> {
 		let mut desired_format = device.format()?;
 		desired_format.width = VIDEO_WIDTH;
 		desired_format.height = VIDEO_HEIGHT;
-		desired_format.fourcc = FourCC::new(b"YUYV");
+		desired_format.fourcc = FourCC::new(FOUR_CC);
 
 		let actual_format = device.set_format(&desired_format)?;
 		if actual_format.width != desired_format.width
