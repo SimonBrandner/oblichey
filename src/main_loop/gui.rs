@@ -62,8 +62,7 @@ impl eframe::App for GUI<'_> {
 		}
 
 		egui::CentralPanel::default().show(ctx, |ui| {
-			let egui_image =
-				ColorImage::from_rgb(image.get_size_array(), &image.clone().into_raw());
+			let egui_image = ColorImage::from_rgb(image.get_size_array(), &image.into_raw());
 			let texture =
 				ui.ctx()
 					.load_texture("Camera", egui_image, egui::TextureOptions::default());
