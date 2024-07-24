@@ -1,5 +1,6 @@
 use std::ops::Add;
 
+// The use of `usize` here probably needs to be reconsidered
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2D {
 	pub x: usize,
