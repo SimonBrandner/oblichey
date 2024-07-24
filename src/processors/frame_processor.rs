@@ -63,15 +63,13 @@ impl FrameProcessor {
 			.to_vec::<f32>()
 			.expect("Boxes have an unexpected shape!");
 
-		// TODO: Refactor this
-		// Create faces out of the boxes with high confidence
 		let mut detected_faces = Vec::new();
-		let mut i = 0;
-		let mut j = 0;
-		while i < confidences.len() {
-			if confidences[i + 1] <= CONFIDENCE_THRESHOLD {
-				i += 2;
-				j += 4;
+		for n in (0..confidences.len()).step_by(2) {
+			// This produces (i, j): (1, 0), (3, 4), (5, 8), (7, 12)...
+			let i = n + 1;
+			let j = n * 2;
+
+			if confidences[i] <= CONFIDENCE_THRESHOLD {
 				continue;
 			}
 
@@ -88,9 +86,6 @@ impl FrameProcessor {
 					},
 				},
 			});
-
-			i += 2;
-			j += 4;
 		}
 
 		// TODO: Filter out colliding faces
