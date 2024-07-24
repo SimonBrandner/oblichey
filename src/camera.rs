@@ -1,3 +1,4 @@
+use crate::processors::frame_processor::Vec2D;
 use crate::utils::convert_yuyv_to_rgb;
 use eframe::egui::Vec2;
 use image::{ImageBuffer, ImageError, Rgb};
@@ -20,6 +21,8 @@ pub enum Error {
 }
 
 pub trait ImageSize {
+	#[allow(non_snake_case)]
+	fn get_size_vec2D(&self) -> Vec2D;
 	fn get_size_array(&self) -> [usize; 2];
 	fn get_size_vec2(&self) -> Vec2;
 }
@@ -30,6 +33,12 @@ impl ImageSize for ImageBuffer<Rgb<u8>, Vec<u8>> {
 	}
 	fn get_size_vec2(&self) -> Vec2 {
 		Vec2::new(VIDEO_WIDTH as f32, VIDEO_HEIGHT as f32)
+	}
+	fn get_size_vec2D(&self) -> Vec2D {
+		Vec2D {
+			x: VIDEO_WIDTH as usize,
+			y: VIDEO_HEIGHT as usize,
+		}
 	}
 }
 
