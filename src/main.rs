@@ -5,7 +5,7 @@ mod processors;
 mod utils;
 
 use crate::main_loop::{gui, no_gui};
-use crate::processors::{embedding_processor::AuthProcessor, frame_processor::FrameProcessor};
+use crate::processors::{face_processor::AuthProcessor, frame_processor::FrameProcessor};
 use camera::Camera;
 use clap::Parser;
 use core::panic;
@@ -41,12 +41,12 @@ fn main() {
 		Err(e) => panic!("Failed construct camera: {e}"),
 	};
 
-	let embedding_processor = Box::new(AuthProcessor::new());
+	let face_processor = Box::new(AuthProcessor::new());
 	let frame_processor = FrameProcessor::new();
 
 	if args.no_gui {
-		no_gui::start(camera, frame_processor, embedding_processor);
+		no_gui::start(camera, frame_processor, face_processor);
 	} else {
-		gui::start(camera, frame_processor, embedding_processor);
+		gui::start(camera, frame_processor, face_processor);
 	}
 }

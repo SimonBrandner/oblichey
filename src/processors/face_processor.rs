@@ -1,8 +1,8 @@
 use super::frame_processor::Face;
 use std::fmt::Debug;
 
-pub trait EmbeddingProcessor: Debug {
-	fn process_embeddings(&self, faces: &[Face]);
+pub trait FaceProcessor: Debug {
+	fn process_faces(&self, faces: &[Face]);
 	fn is_finished(&self) -> bool;
 }
 
@@ -24,8 +24,8 @@ impl ScanProcessor {
 	}
 }
 
-impl EmbeddingProcessor for ScanProcessor {
-	fn process_embeddings(&self, faces: &[Face]) {}
+impl FaceProcessor for ScanProcessor {
+	fn process_faces(&self, faces: &[Face]) {}
 
 	fn is_finished(&self) -> bool {
 		self.result.is_some()
@@ -50,8 +50,8 @@ impl AuthProcessor {
 	}
 }
 
-impl EmbeddingProcessor for AuthProcessor {
-	fn process_embeddings(&self, faces: &[Face]) {}
+impl FaceProcessor for AuthProcessor {
+	fn process_faces(&self, faces: &[Face]) {}
 
 	fn is_finished(&self) -> bool {
 		self.result.is_some()

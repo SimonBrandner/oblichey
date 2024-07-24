@@ -1,6 +1,6 @@
 use crate::{
 	camera::{Camera, ImageSize},
-	processors::{embedding_processor::EmbeddingProcessor, frame_processor::FrameProcessor},
+	processors::{face_processor::FaceProcessor, frame_processor::FrameProcessor},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Rounding, Stroke},
@@ -15,31 +15,31 @@ const FACE_RECTANGLE_STROKE: Stroke = Stroke {
 pub fn start(
 	camera: Camera<'static>,
 	frame_processor: FrameProcessor,
-	embedding_processor: Box<dyn EmbeddingProcessor>,
+	face_processor: Box<dyn FaceProcessor>,
 ) {
 	eframe::run_native(
 		"Gday",
 		NativeOptions::default(),
-		Box::new(|_| Box::new(GUI::new(camera, frame_processor, embedding_processor))),
+		Box::new(|_| Box::new(GUI::new(camera, frame_processor, face_processor))),
 	)
 }
 
 struct GUI<'a> {
 	camera: Camera<'a>,
 	frame_processor: FrameProcessor,
-	embedding_processor: Box<dyn EmbeddingProcessor>,
+	face_processor: Box<dyn FaceProcessor>,
 }
 
 impl<'a> GUI<'a> {
 	pub fn new(
 		camera: Camera<'a>,
 		frame_processor: FrameProcessor,
-		embedding_processor: Box<dyn EmbeddingProcessor>,
+		face_processor: Box<dyn FaceProcessor>,
 	) -> Self {
 		Self {
 			camera,
 			frame_processor,
-			embedding_processor,
+			face_processor,
 		}
 	}
 }
@@ -55,9 +55,9 @@ impl eframe::App for GUI<'_> {
 		};
 
 		let frame_processor_state = self.frame_processor.process_frame(&image);
-		self.embedding_processor
-			.process_embeddings(&frame_processor_state.faces);
-		if self.embedding_processor.is_finished() {
+		self.face_processor
+			.process_faces(&frame_processor_state.faces);
+		if self.face_processor.is_finished() {
 			frame.close();
 		}
 
