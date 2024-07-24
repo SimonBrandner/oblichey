@@ -43,16 +43,25 @@ impl FrameProcessor {
 	pub fn process_frame(&self, frame: &RgbImage) -> ProcessorState {
 		let input = self.normalize_detector_input(frame);
 		let output = self.detector.forward(input);
-		let detected_faces = self.interpret_detector_output(output, &frame.get_size_vec2D());
+		let face_rectangles = self.interpret_detector_output(output, &frame.get_size_vec2D());
 
-		ProcessorState { detected_faces }
+		// For now we fill the `face` field with `default()`
+		ProcessorState {
+			detected_faces: face_rectangles
+				.into_iter()
+				.map(|rectangle| DetectedFace {
+					face: Face::default(),
+					rectangle,
+				})
+				.collect(),
+		}
 	}
 
 	fn interpret_detector_output(
 		&self,
 		output: (Tensor<Backend, 3>, Tensor<Backend, 3>),
 		frame_size: &Vec2D,
-	) -> Vec<DetectedFace> {
+	) -> Vec<Rectangle> {
 		let (confidences, boxes) = output;
 		let confidences = confidences
 			.to_data()
@@ -63,7 +72,7 @@ impl FrameProcessor {
 			.to_vec::<f32>()
 			.expect("Boxes have an unexpected shape!");
 
-		let mut detected_faces = Vec::new();
+		let mut face_rectangles = Vec::new();
 		for n in (0..confidences.len()).step_by(2) {
 			// This produces (i, j): (1, 0), (3, 4), (5, 8), (7, 12)...
 			let i = n + 1;
@@ -73,24 +82,21 @@ impl FrameProcessor {
 				continue;
 			}
 
-			detected_faces.push(DetectedFace {
-				face: Face::default(),
-				rectangle: Rectangle {
-					min: Vec2D {
-						x: (boxes[j + 0] * frame_size.x as f32) as usize,
-						y: (boxes[j + 1] * frame_size.y as f32) as usize,
-					},
-					max: Vec2D {
-						x: (boxes[j + 2] * frame_size.x as f32) as usize,
-						y: (boxes[j + 3] * frame_size.y as f32) as usize,
-					},
+			face_rectangles.push(Rectangle {
+				min: Vec2D {
+					x: (boxes[j + 0] * frame_size.x as f32) as usize,
+					y: (boxes[j + 1] * frame_size.y as f32) as usize,
+				},
+				max: Vec2D {
+					x: (boxes[j + 2] * frame_size.x as f32) as usize,
+					y: (boxes[j + 3] * frame_size.y as f32) as usize,
 				},
 			});
 		}
 
 		// TODO: Filter out colliding faces
 
-		detected_faces
+		face_rectangles
 	}
 
 	fn normalize_detector_input(&self, frame: &RgbImage) -> Tensor<Backend, 4> {
