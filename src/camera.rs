@@ -2,7 +2,7 @@ use crate::utils::convert_yuyv_to_rgb;
 use eframe::egui::Vec2;
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
-use std::{io, u32};
+use std::io;
 use v4l::buffer::Type;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
@@ -57,6 +57,7 @@ impl Display for Error {
 
 pub struct Camera<'a> {
 	stream: Stream<'a>,
+	device: Device,
 }
 
 impl<'a> Camera<'a> {
@@ -80,6 +81,7 @@ impl<'a> Camera<'a> {
 
 		Ok(Self {
 			stream: Stream::with_buffers(&mut device, Type::VideoCapture, 4)?,
+			device,
 		})
 	}
 
@@ -87,5 +89,13 @@ impl<'a> Camera<'a> {
 		let (yuyv_frame_buffer, _) = self.stream.next()?;
 		let rgb_frame_buffer = convert_yuyv_to_rgb(yuyv_frame_buffer, VIDEO_WIDTH, VIDEO_HEIGHT);
 		Ok(rgb_frame_buffer)
+	}
+
+	pub fn get_output_size(&self) -> Result<Vec2D, Error> {
+		let format = self.device.format()?;
+		Ok(Vec2D {
+			x: format.width as usize,
+			y: format.height as usize,
+		})
 	}
 }

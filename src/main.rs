@@ -47,6 +47,8 @@ fn main() {
 	if args.no_gui {
 		no_gui::start(camera, frame_processor, face_processor);
 	} else {
-		gui::start(camera, frame_processor, face_processor);
+		if let Err(e) = gui::start(camera, frame_processor, face_processor) {
+			panic!("Error during running GUI: {e}");
+		}
 	}
 }
