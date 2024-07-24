@@ -10,6 +10,7 @@ use image::{
 	RgbImage,
 };
 
+const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
 const MODEL_IMAGE_SIZE: Vec2D = Vec2D { x: 640, y: 480 };
 
@@ -94,7 +95,21 @@ impl FrameProcessor {
 			});
 		}
 
-		// TODO: Filter out colliding faces
+		// Filter out colliding face rectangles
+		let mut i = 0;
+		while i < face_rectangles.len() {
+			let mut j = i + 1;
+			while j < face_rectangles.len() {
+				if face_rectangles[i].intersection_over_union(&face_rectangles[j])
+					> INTERSECTION_OVER_UNION_THRESHOLD
+				{
+					face_rectangles.remove(j);
+					j -= 1
+				}
+				j += 1
+			}
+			i += 1;
+		}
 
 		face_rectangles
 	}
