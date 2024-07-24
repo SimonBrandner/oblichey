@@ -1,74 +1,23 @@
 use crate::{
 	camera::ImageSize,
 	model::{detector, recognizer},
+	types::{DetectedFace, Face, Rectangle, Vec2D},
 };
 use burn::tensor::{Tensor, TensorData};
 use burn_ndarray::{NdArray, NdArrayDevice};
-use eframe::egui::{Pos2, Rect};
 use image::{
 	imageops::{resize, FilterType},
 	RgbImage,
 };
-use std::ops::Add;
 
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
 const MODEL_IMAGE_SIZE: Vec2D = Vec2D { x: 640, y: 480 };
 
 type Backend = NdArray<f32>;
 
-#[derive(Debug, Clone, Copy)]
-pub struct Vec2D {
-	pub x: usize,
-	pub y: usize,
-}
-
-impl Add<Vec2D> for Vec2D {
-	type Output = Self;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self {
-			x: self.x + rhs.x,
-			y: self.y + rhs.y,
-		}
-	}
-}
-
-impl Vec2D {
-	pub fn to_pos2(&self) -> Pos2 {
-		Pos2 {
-			x: self.x as f32,
-			y: self.y as f32,
-		}
-	}
-}
-
-#[derive(Debug, Clone)]
-pub struct FaceRectangle {
-	pub min: Vec2D,
-	pub max: Vec2D,
-}
-
-impl FaceRectangle {
-	pub fn to_rect(&self) -> Rect {
-		Rect {
-			min: self.min.to_pos2(),
-			max: self.max.to_pos2(),
-		}
-	}
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct FaceEmbedding;
-
-#[derive(Debug, Clone)]
-pub struct Face {
-	pub rectangle: FaceRectangle,
-	pub embedding: FaceEmbedding,
-}
-
 #[derive(Debug, Clone)]
 pub struct ProcessorState {
-	pub faces: Vec<Face>,
+	pub detected_faces: Vec<DetectedFace>,
 }
 
 #[derive(Debug)]
@@ -94,16 +43,16 @@ impl FrameProcessor {
 	pub fn process_frame(&self, frame: &RgbImage) -> ProcessorState {
 		let input = self.normalize_detector_input(frame);
 		let output = self.detector.forward(input);
-		let faces = self.interpret_detector_output(output, &frame.get_size_vec2D());
+		let detected_faces = self.interpret_detector_output(output, &frame.get_size_vec2D());
 
-		ProcessorState { faces }
+		ProcessorState { detected_faces }
 	}
 
 	fn interpret_detector_output(
 		&self,
 		output: (Tensor<Backend, 3>, Tensor<Backend, 3>),
 		frame_size: &Vec2D,
-	) -> Vec<Face> {
+	) -> Vec<DetectedFace> {
 		let (confidences, boxes) = output;
 		let confidences = confidences
 			.to_data()
@@ -116,7 +65,7 @@ impl FrameProcessor {
 
 		// TODO: Refactor this
 		// Create faces out of the boxes with high confidence
-		let mut faces = Vec::new();
+		let mut detected_faces = Vec::new();
 		let mut i = 0;
 		let mut j = 0;
 		while i < confidences.len() {
@@ -126,9 +75,9 @@ impl FrameProcessor {
 				continue;
 			}
 
-			faces.push(Face {
-				embedding: FaceEmbedding::default(),
-				rectangle: FaceRectangle {
+			detected_faces.push(DetectedFace {
+				face: Face::default(),
+				rectangle: Rectangle {
 					min: Vec2D {
 						x: (boxes[j + 0] * frame_size.x as f32) as usize,
 						y: (boxes[j + 1] * frame_size.y as f32) as usize,
@@ -146,7 +95,7 @@ impl FrameProcessor {
 
 		// TODO: Filter out colliding faces
 
-		faces
+		detected_faces
 	}
 
 	fn normalize_detector_input(&self, frame: &RgbImage) -> Tensor<Backend, 4> {

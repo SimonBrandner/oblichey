@@ -1,4 +1,4 @@
-use crate::processors::frame_processor::Vec2D;
+use crate::types::Vec2D;
 use crate::utils::convert_yuyv_to_rgb;
 use eframe::egui::Vec2;
 use image::{ImageBuffer, ImageError, Rgb};

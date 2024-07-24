@@ -17,7 +17,7 @@ pub fn start(
 			}
 		};
 		let frame_processor_state = frame_processor.process_frame(&image);
-		face_processor.process_faces(&frame_processor_state.faces);
+		face_processor.process_detected_faces(&frame_processor_state.detected_faces);
 
 		if face_processor.is_finished() {
 			return;

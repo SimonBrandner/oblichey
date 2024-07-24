@@ -2,6 +2,7 @@ mod camera;
 mod main_loop;
 mod model;
 mod processors;
+mod types;
 mod utils;
 
 use crate::main_loop::{gui, no_gui};

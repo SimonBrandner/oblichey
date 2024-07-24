@@ -1,12 +1,39 @@
 use crate::{
 	camera::{self, Camera, ImageSize},
 	processors::{face_processor::FaceProcessor, frame_processor::FrameProcessor},
+	types::{Rectangle, Vec2D},
 };
 use eframe::{
-	egui::{self, Color32, ColorImage, Rounding, Stroke, Vec2},
+	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
 	NativeOptions,
 };
 use std::fmt::Display;
+
+trait ToVec2 {
+	fn to_pos2(&self) -> Pos2;
+}
+
+impl ToVec2 for Vec2D {
+	fn to_pos2(&self) -> Pos2 {
+		Pos2 {
+			x: self.x as f32,
+			y: self.y as f32,
+		}
+	}
+}
+
+trait ToRect {
+	fn to_rect(&self) -> Rect;
+}
+
+impl ToRect for Rectangle {
+	fn to_rect(&self) -> Rect {
+		Rect {
+			min: self.min.to_pos2(),
+			max: self.max.to_pos2(),
+		}
+	}
+}
 
 const FACE_RECTANGLE_STROKE: Stroke = Stroke {
 	width: 4.0,
@@ -82,7 +109,7 @@ impl eframe::App for GUI<'_> {
 
 		let frame_processor_state = self.frame_processor.process_frame(&image);
 		self.face_processor
-			.process_faces(&frame_processor_state.faces);
+			.process_detected_faces(&frame_processor_state.detected_faces);
 		if self.face_processor.is_finished() {
 			frame.close();
 		}
@@ -99,7 +126,7 @@ impl eframe::App for GUI<'_> {
 						.load_texture("Camera", egui_image, egui::TextureOptions::default());
 
 				ui.image(&image_texture, image_size_vec2);
-				for face in frame_processor_state.faces {
+				for face in frame_processor_state.detected_faces {
 					ui.painter().rect_stroke(
 						face.rectangle.to_rect(),
 						Rounding::default(),
