@@ -41,21 +41,19 @@ impl FrameProcessor {
 		}
 	}
 
-	pub fn process_frame(&self, frame: &RgbImage) -> ProcessorState {
+	pub fn process_frame(&self, frame: &RgbImage) -> Vec<DetectedFace> {
 		let input = self.normalize_detector_input(frame);
 		let output = self.detector.forward(input);
 		let face_rectangles = self.interpret_detector_output(output, &frame.get_size_vec2D());
 
 		// For now we fill the `face` field with `default()`
-		ProcessorState {
-			detected_faces: face_rectangles
-				.into_iter()
-				.map(|rectangle| DetectedFace {
-					face: Face::default(),
-					rectangle,
-				})
-				.collect(),
-		}
+		face_rectangles
+			.into_iter()
+			.map(|rectangle| DetectedFace {
+				face: Face::default(),
+				rectangle,
+			})
+			.collect()
 	}
 
 	fn interpret_detector_output(

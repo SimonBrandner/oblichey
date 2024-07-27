@@ -1,8 +1,9 @@
-use image::{ImageBuffer, Rgb};
+use crate::camera::Frame;
+use image::ImageBuffer;
 use rayon::prelude::*;
 
 // This has been generated using ChatGPT, it's slow but it'll do for now
-pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> Frame {
 	let mut rgb_data = vec![0; (width * height * 3) as usize];
 
 	rgb_data

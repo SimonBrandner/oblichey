@@ -1,15 +1,17 @@
 mod camera;
-mod main_loop;
+mod gui;
 mod model;
 mod processors;
 mod types;
 mod utils;
 
-use crate::main_loop::{gui, no_gui};
-use crate::processors::{face_processor::AuthProcessor, frame_processor::FrameProcessor};
-use camera::Camera;
+use camera::Frame;
 use clap::Parser;
 use core::panic;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
+use std::thread::{self};
+use types::DetectedFace;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
 enum Command {
@@ -37,19 +39,24 @@ fn main() {
 		panic!("Not implemented!");
 	}
 
-	let camera = match Camera::new() {
-		Ok(c) => c,
-		Err(e) => panic!("Failed construct camera: {e}"),
-	};
+	let frame: Arc<Mutex<Option<Frame>>> = Arc::new(Mutex::new(None));
+	let detected_faces: Arc<Mutex<Vec<DetectedFace>>> = Arc::new(Mutex::new(Vec::new()));
+	let finished: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
 
-	let face_processor = Box::new(AuthProcessor::new());
-	let frame_processor = FrameProcessor::new();
+	let frame_clone = frame.clone();
+	let finished_clone = finished.clone();
+	thread::spawn(move || camera::start(frame_clone, finished_clone));
 
-	if args.no_gui {
-		no_gui::start(camera, frame_processor, face_processor);
-	} else {
-		if let Err(e) = gui::start(camera, frame_processor, face_processor) {
-			panic!("Error during running GUI: {e}");
-		}
+	if !args.no_gui {
+		let detected_faces_clone = detected_faces.clone();
+		let frame_clone = frame.clone();
+		let finished_clone = finished.clone();
+		thread::spawn(move || {
+			if let Err(e) = gui::start(frame_clone, detected_faces_clone, finished_clone) {
+				panic!("Error during running GUI: {e}");
+			}
+		});
 	}
+
+	let _ = thread::spawn(move || processors::start(frame, detected_faces, finished)).join();
 }

@@ -4,14 +4,17 @@ use eframe::egui::Vec2;
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
 use std::io;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use v4l::buffer::Type;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
 use v4l::video::Capture;
 use v4l::{Device, FourCC};
 
-const VIDEO_WIDTH: u32 = 640;
-const VIDEO_HEIGHT: u32 = 480;
+pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
+pub const VIDEO_WIDTH: u32 = 640;
+pub const VIDEO_HEIGHT: u32 = 480;
 const FOUR_CC: &[u8; 4] = b"YUYV";
 
 pub enum Error {
@@ -27,7 +30,7 @@ pub trait ImageSize {
 	fn get_size_vec2(&self) -> Vec2;
 }
 
-impl ImageSize for ImageBuffer<Rgb<u8>, Vec<u8>> {
+impl ImageSize for Frame {
 	fn get_size_array(&self) -> [usize; 2] {
 		[VIDEO_WIDTH as _, VIDEO_HEIGHT as _]
 	}
@@ -66,7 +69,6 @@ impl Display for Error {
 
 pub struct Camera<'a> {
 	stream: Stream<'a>,
-	device: Device,
 }
 
 impl<'a> Camera<'a> {
@@ -90,21 +92,42 @@ impl<'a> Camera<'a> {
 
 		Ok(Self {
 			stream: Stream::with_buffers(&mut device, Type::VideoCapture, 4)?,
-			device,
 		})
 	}
 
-	pub fn get_frame(&mut self) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Error> {
+	pub fn get_frame(&mut self) -> Result<Frame, Error> {
 		let (yuyv_frame_buffer, _) = self.stream.next()?;
 		let rgb_frame_buffer = convert_yuyv_to_rgb(yuyv_frame_buffer, VIDEO_WIDTH, VIDEO_HEIGHT);
 		Ok(rgb_frame_buffer)
 	}
+}
 
-	pub fn get_output_size(&self) -> Result<Vec2D, Error> {
-		let format = self.device.format()?;
-		Ok(Vec2D {
-			x: format.width as usize,
-			y: format.height as usize,
-		})
+pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
+	let mut camera = match Camera::new() {
+		Ok(c) => c,
+		Err(e) => panic!("Failed construct camera: {e}"),
+	};
+
+	loop {
+		if finished.load(Ordering::SeqCst) {
+			return;
+		}
+
+		let new_frame = match camera.get_frame() {
+			Ok(f) => f,
+			Err(e) => {
+				finished.store(true, Ordering::SeqCst);
+				panic!("Failed to get frame: {e}");
+			}
+		};
+		let mut frame_lock = match frame.lock() {
+			Ok(l) => l,
+			Err(e) => {
+				finished.store(true, Ordering::SeqCst);
+				panic!("Failed to get frame lock: {e}");
+			}
+		};
+		*frame_lock = Some(new_frame);
+		drop(frame_lock);
 	}
 }

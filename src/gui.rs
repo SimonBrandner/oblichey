@@ -1,13 +1,19 @@
 use crate::{
-	camera::{self, Camera, ImageSize},
-	processors::{face_processor::FaceProcessor, frame_processor::FrameProcessor},
-	types::{Rectangle, Vec2D},
+	camera::{self, Frame, ImageSize, VIDEO_HEIGHT, VIDEO_WIDTH},
+	types::{DetectedFace, Rectangle, Vec2D},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
-	NativeOptions,
+	EventLoopBuilderHook, NativeOptions,
 };
-use std::fmt::Display;
+use std::{
+	fmt::Display,
+	sync::{
+		atomic::{AtomicBool, Ordering},
+		Arc, Mutex,
+	},
+};
+use winit::platform::unix::EventLoopBuilderExtUnix;
 
 trait ToVec2 {
 	fn to_pos2(&self) -> Pos2;
@@ -59,60 +65,83 @@ impl Display for Error {
 }
 
 pub fn start(
-	camera: Camera<'static>,
-	frame_processor: FrameProcessor,
-	face_processor: Box<dyn FaceProcessor>,
+	frame: Arc<Mutex<Option<Frame>>>,
+	detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
+	finished: Arc<AtomicBool>,
 ) -> Result<(), Error> {
-	let size = camera.get_output_size()?;
+	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
+		event_loop_builder.with_any_thread(true);
+	}));
 
 	eframe::run_native(
 		"Gday",
 		NativeOptions {
+			event_loop_builder,
 			resizable: false,
-			initial_window_size: Some(Vec2::new(size.x as f32, size.y as f32)),
+			initial_window_size: Some(Vec2::new(VIDEO_WIDTH as f32, VIDEO_HEIGHT as f32)),
 			..NativeOptions::default()
 		},
-		Box::new(|_| Box::new(GUI::new(camera, frame_processor, face_processor))),
+		Box::new(|_| Box::new(GUI::new(frame, detected_faces, finished))),
 	);
 	Ok(())
 }
 
-struct GUI<'a> {
-	camera: Camera<'a>,
-	frame_processor: FrameProcessor,
-	face_processor: Box<dyn FaceProcessor>,
+struct GUI {
+	frame: Arc<Mutex<Option<Frame>>>,
+	detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
+	finished: Arc<AtomicBool>,
 }
 
-impl<'a> GUI<'a> {
+impl GUI {
 	pub fn new(
-		camera: Camera<'a>,
-		frame_processor: FrameProcessor,
-		face_processor: Box<dyn FaceProcessor>,
+		frame: Arc<Mutex<Option<Frame>>>,
+		detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
+		finished: Arc<AtomicBool>,
 	) -> Self {
 		Self {
-			camera,
-			frame_processor,
-			face_processor,
+			frame,
+			detected_faces,
+			finished,
 		}
 	}
 }
 
-impl eframe::App for GUI<'_> {
+impl eframe::App for GUI {
+	fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+		self.finished.store(true, Ordering::SeqCst);
+	}
+
 	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-		let image = match self.camera.get_frame() {
-			Ok(b) => b,
+		if self.finished.load(Ordering::SeqCst) {
+			frame.close();
+			return;
+		}
+
+		let frame_lock = match self.frame.lock() {
+			Ok(l) => l,
 			Err(e) => {
-				println!("Failed to get frame: {e}");
+				self.finished.store(true, Ordering::SeqCst);
+				panic!("Failed to get frame lock: {e}");
+			}
+		};
+		let image = match frame_lock.clone() {
+			Some(f) => f.clone(),
+			None => {
+				ctx.request_repaint();
 				return;
 			}
 		};
+		drop(frame_lock);
 
-		let frame_processor_state = self.frame_processor.process_frame(&image);
-		self.face_processor
-			.process_detected_faces(&frame_processor_state.detected_faces);
-		if self.face_processor.is_finished() {
-			frame.close();
-		}
+		let detected_faces_lock = match self.detected_faces.lock() {
+			Ok(l) => l,
+			Err(e) => {
+				self.finished.store(true, Ordering::SeqCst);
+				panic!("Failed to get detected faces lock: {e}");
+			}
+		};
+		let detected_faces = detected_faces_lock.clone();
+		drop(detected_faces_lock);
 
 		egui::CentralPanel::default()
 			.frame(egui::Frame::none().inner_margin(0.0).outer_margin(0.0))
@@ -126,7 +155,7 @@ impl eframe::App for GUI<'_> {
 						.load_texture("Camera", egui_image, egui::TextureOptions::default());
 
 				ui.image(&image_texture, image_size_vec2);
-				for face in frame_processor_state.detected_faces {
+				for face in detected_faces {
 					ui.painter().rect_stroke(
 						face.rectangle.to_rect(),
 						Rounding::default(),
