@@ -22,7 +22,8 @@ pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> ImageBuffer<
 			chunk[3..6].copy_from_slice(&[r1, g1, b1]);
 		});
 
-	ImageBuffer::from_vec(width, height, rgb_data).unwrap()
+	ImageBuffer::from_vec(width, height, rgb_data)
+		.expect("Something failed went awry during image conversion")
 }
 
 fn convert_pixel_yuyv_to_rgb(y: i32, u: i32, v: i32) -> (u8, u8, u8) {
