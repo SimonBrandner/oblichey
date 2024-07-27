@@ -1,6 +1,6 @@
 mod camera;
 mod gui;
-mod model;
+mod models;
 mod processors;
 mod types;
 mod utils;

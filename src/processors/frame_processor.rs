@@ -1,6 +1,6 @@
 use crate::{
 	camera::ImageSize,
-	model::{detector, recognizer},
+	models::{detector, recognizer},
 	types::{DetectedFace, Face, Rectangle, Vec2D},
 };
 use burn::tensor::{Tensor, TensorData};
