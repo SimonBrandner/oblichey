@@ -1,17 +1,17 @@
 mod camera;
+mod geometry;
 mod gui;
 mod models;
 mod processors;
-mod types;
 mod utils;
 
 use camera::Frame;
 use clap::Parser;
 use core::panic;
+use processors::DetectedFace;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
-use types::DetectedFace;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
 enum Command {

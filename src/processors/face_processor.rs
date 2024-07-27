@@ -1,4 +1,4 @@
-use crate::types::DetectedFace;
+use super::DetectedFace;
 use std::fmt::Debug;
 
 pub trait FaceProcessor: Debug {

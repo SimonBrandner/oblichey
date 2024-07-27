@@ -1,6 +1,7 @@
 use crate::{
 	camera::{self, Frame, ImageSize, VIDEO_HEIGHT, VIDEO_WIDTH},
-	types::{DetectedFace, Rectangle, Vec2D},
+	geometry::{Rectangle, Vec2D},
+	processors::DetectedFace,
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},

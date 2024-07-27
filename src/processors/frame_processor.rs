@@ -1,7 +1,8 @@
+use super::{DetectedFace, Face};
 use crate::{
 	camera::ImageSize,
+	geometry::{Rectangle, Vec2D},
 	models::{detector, recognizer},
-	types::{DetectedFace, Face, Rectangle, Vec2D},
 };
 use burn::tensor::{Tensor, TensorData};
 use burn_ndarray::{NdArray, NdArrayDevice};

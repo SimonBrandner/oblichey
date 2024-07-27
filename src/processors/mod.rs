@@ -5,12 +5,21 @@ use self::{
 	face_processor::{AuthProcessor, FaceProcessor},
 	frame_processor::FrameProcessor,
 };
-use crate::{camera::Frame, types::DetectedFace};
+use crate::{camera::Frame, geometry::Rectangle};
 use core::panic;
 use std::sync::{
 	atomic::{AtomicBool, Ordering},
 	Arc, Mutex,
 };
+
+#[derive(Debug, Clone, Default)]
+pub struct Face;
+
+#[derive(Debug, Clone)]
+pub struct DetectedFace {
+	pub rectangle: Rectangle,
+	pub face: Face,
+}
 
 pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,

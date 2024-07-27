@@ -47,12 +47,3 @@ impl Rectangle {
 		}
 	}
 }
-
-#[derive(Debug, Clone, Default)]
-pub struct Face;
-
-#[derive(Debug, Clone)]
-pub struct DetectedFace {
-	pub rectangle: Rectangle,
-	pub face: Face,
-}
