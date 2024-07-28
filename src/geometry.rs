@@ -7,6 +7,12 @@ pub struct Vec2D {
 	pub y: usize,
 }
 
+impl Vec2D {
+	pub fn new(x: usize, y: usize) -> Self {
+		Self { x, y }
+	}
+}
+
 impl Add<Vec2D> for Vec2D {
 	type Output = Self;
 
