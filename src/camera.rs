@@ -105,7 +105,10 @@ impl<'a> Camera<'a> {
 pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 	let mut camera = match Camera::new() {
 		Ok(c) => c,
-		Err(e) => panic!("Failed construct camera: {e}"),
+		Err(e) => {
+			finished.store(true, Ordering::SeqCst);
+			panic!("Failed construct camera: {e}")
+		}
 	};
 
 	loop {
