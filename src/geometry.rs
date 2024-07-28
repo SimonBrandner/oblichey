@@ -26,6 +26,19 @@ pub struct Rectangle {
 
 impl Rectangle {
 	pub fn intersection_over_union(&self, other: &Rectangle) -> f32 {
+		if self.min.x > other.max.x {
+			return 0.0;
+		}
+		if self.min.y > other.max.y {
+			return 0.0;
+		}
+		if other.min.x > self.max.x {
+			return 0.0;
+		}
+		if other.min.y > self.max.y {
+			return 0.0;
+		}
+
 		let intersection_min_x = self.min.x.max(other.min.x);
 		let intersection_min_y = self.min.y.max(other.min.y);
 		let intersection_max_x = self.max.x.min(other.max.x);
