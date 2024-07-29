@@ -2,7 +2,32 @@ use crate::camera::Frame;
 use image::ImageBuffer;
 use rayon::prelude::*;
 
-// This has been generated using ChatGPT, it's slow but it'll do for now
+pub fn average_brightness(grey_data: &[u8], width: u32, height: u32) -> f32 {
+	let mut sum = 0.0;
+	for pixel in grey_data {
+		sum += *pixel as f32;
+	}
+
+	sum / (width * height) as f32
+}
+
+pub fn convert_grey_to_rgb(grey_data: &[u8], width: u32, height: u32) -> Frame {
+	let mut rgb_data = vec![0; (width * height * 3) as usize];
+
+	rgb_data
+		.par_chunks_mut(3)
+		.enumerate()
+		.for_each(|(i, chunk)| {
+			let grey_value = grey_data[i];
+			chunk[0] = grey_value;
+			chunk[1] = grey_value;
+			chunk[2] = grey_value;
+		});
+
+	ImageBuffer::from_vec(width, height, rgb_data)
+		.expect("Something went awry during image conversion")
+}
+
 pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> Frame {
 	let mut rgb_data = vec![0; (width * height * 3) as usize];
 
@@ -24,7 +49,7 @@ pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> Frame {
 		});
 
 	ImageBuffer::from_vec(width, height, rgb_data)
-		.expect("Something failed went awry during image conversion")
+		.expect("Something went awry during image conversion")
 }
 
 fn convert_pixel_yuyv_to_rgb(y: i32, u: i32, v: i32) -> (u8, u8, u8) {

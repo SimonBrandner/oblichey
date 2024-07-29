@@ -1,7 +1,7 @@
 use crate::{
-	camera::{self, Frame, ImageSize, VIDEO_HEIGHT, VIDEO_WIDTH},
+	camera::{self, Frame},
 	geometry::{Rectangle, Vec2D},
-	processors::DetectedFace,
+	processors::{frame_processor::MODEL_INPUT_IMAGE_SIZE, DetectedFace},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
@@ -79,7 +79,10 @@ pub fn start(
 		NativeOptions {
 			event_loop_builder,
 			resizable: false,
-			initial_window_size: Some(Vec2::new(VIDEO_WIDTH as f32, VIDEO_HEIGHT as f32)),
+			initial_window_size: Some(Vec2::new(
+				MODEL_INPUT_IMAGE_SIZE.x as f32,
+				MODEL_INPUT_IMAGE_SIZE.y as f32,
+			)),
 			..NativeOptions::default()
 		},
 		Box::new(|_| Box::new(GUI::new(frame, detected_faces, finished))),
@@ -134,6 +137,17 @@ impl eframe::App for GUI {
 		};
 		drop(frame_lock);
 
+		assert_eq!(
+			image.width() as usize,
+			MODEL_INPUT_IMAGE_SIZE.x,
+			"Image width does not match network requirements!"
+		);
+		assert_eq!(
+			image.height() as usize,
+			MODEL_INPUT_IMAGE_SIZE.y,
+			"Image height does not match network requirements!"
+		);
+
 		let detected_faces_lock = match self.detected_faces.lock() {
 			Ok(l) => l,
 			Err(e) => {
@@ -147,15 +161,21 @@ impl eframe::App for GUI {
 		egui::CentralPanel::default()
 			.frame(egui::Frame::none().inner_margin(0.0).outer_margin(0.0))
 			.show(ctx, |ui| {
-				let image_size_vec2 = image.get_size_vec2();
-				let image_size_array = image.get_size_array();
-				let image_raw = &image.into_raw();
-				let egui_image = ColorImage::from_rgb(image_size_array, image_raw);
+				let egui_image = ColorImage::from_rgb(
+					[MODEL_INPUT_IMAGE_SIZE.x, MODEL_INPUT_IMAGE_SIZE.y],
+					&image.into_raw(),
+				);
 				let image_texture =
 					ui.ctx()
 						.load_texture("Camera", egui_image, egui::TextureOptions::default());
 
-				ui.image(&image_texture, image_size_vec2);
+				ui.image(
+					&image_texture,
+					Vec2::new(
+						MODEL_INPUT_IMAGE_SIZE.x as f32,
+						MODEL_INPUT_IMAGE_SIZE.y as f32,
+					),
+				);
 				for face in detected_faces {
 					ui.painter().rect_stroke(
 						face.rectangle.to_rect(),

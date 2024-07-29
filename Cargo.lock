@@ -1952,6 +1952,8 @@ dependencies = [
  "eframe",
  "image 0.24.9",
  "rayon",
+ "strum",
+ "strum_macros",
  "v4l",
  "winit",
 ]

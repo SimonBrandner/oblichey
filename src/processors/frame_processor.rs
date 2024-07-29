@@ -1,19 +1,16 @@
 use super::{DetectedFace, Face};
 use crate::{
-	camera::ImageSize,
+	camera::Frame,
 	geometry::{Rectangle, Vec2D},
 	models::{detector, recognizer},
 };
 use burn::tensor::{Tensor, TensorData};
 use burn_ndarray::{NdArray, NdArrayDevice};
-use image::{
-	imageops::{resize, FilterType},
-	RgbImage,
-};
+use image::RgbImage;
 
 const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
-const MODEL_IMAGE_SIZE: Vec2D = Vec2D { x: 640, y: 480 };
+pub const MODEL_INPUT_IMAGE_SIZE: Vec2D = Vec2D { x: 640, y: 480 };
 
 type Backend = NdArray<f32>;
 
@@ -43,9 +40,20 @@ impl FrameProcessor {
 	}
 
 	pub fn process_frame(&self, frame: &RgbImage) -> Vec<DetectedFace> {
+		assert_eq!(
+			frame.width() as usize,
+			MODEL_INPUT_IMAGE_SIZE.x,
+			"Image width does not match network requirements!"
+		);
+		assert_eq!(
+			frame.height() as usize,
+			MODEL_INPUT_IMAGE_SIZE.y,
+			"Image height does not match network requirements!"
+		);
+
 		let input = self.normalize_detector_input(frame);
 		let output = self.detector.forward(input);
-		let face_rectangles = self.interpret_detector_output(output, &frame.get_size_vec2D());
+		let face_rectangles = self.interpret_detector_output(output);
 
 		// For now we fill the `face` field with `default()`
 		face_rectangles
@@ -60,7 +68,6 @@ impl FrameProcessor {
 	fn interpret_detector_output(
 		&self,
 		output: (Tensor<Backend, 3>, Tensor<Backend, 3>),
-		frame_size: &Vec2D,
 	) -> Vec<Rectangle> {
 		let (confidences, boxes) = output;
 		let confidences = confidences
@@ -84,12 +91,12 @@ impl FrameProcessor {
 
 			face_rectangles.push(Rectangle {
 				min: Vec2D {
-					x: (boxes[j + 0] * frame_size.x as f32) as usize,
-					y: (boxes[j + 1] * frame_size.y as f32) as usize,
+					x: (boxes[j + 0] * MODEL_INPUT_IMAGE_SIZE.x as f32) as usize,
+					y: (boxes[j + 1] * MODEL_INPUT_IMAGE_SIZE.y as f32) as usize,
 				},
 				max: Vec2D {
-					x: (boxes[j + 2] * frame_size.x as f32) as usize,
-					y: (boxes[j + 3] * frame_size.y as f32) as usize,
+					x: (boxes[j + 2] * MODEL_INPUT_IMAGE_SIZE.x as f32) as usize,
+					y: (boxes[j + 3] * MODEL_INPUT_IMAGE_SIZE.y as f32) as usize,
 				},
 			});
 		}
@@ -113,22 +120,12 @@ impl FrameProcessor {
 		face_rectangles
 	}
 
-	fn normalize_detector_input(&self, frame: &RgbImage) -> Tensor<Backend, 4> {
-		// We don't really need this at the moment since we're using the `face_detector_640.onnx`
-		// model but once we switch to the `yolo5s-face.onnx` model we will
-		// Normalize by resizing
-		let resized = resize(
-			frame,
-			MODEL_IMAGE_SIZE.x as u32,
-			MODEL_IMAGE_SIZE.y as u32,
-			FilterType::CatmullRom,
-		);
-
+	fn normalize_detector_input(&self, frame: &Frame) -> Tensor<Backend, 4> {
 		// Shape of the image: height, width, channels
-		let shape = [MODEL_IMAGE_SIZE.y, MODEL_IMAGE_SIZE.x, 3];
+		let shape = [MODEL_INPUT_IMAGE_SIZE.y, MODEL_INPUT_IMAGE_SIZE.x, 3];
 
 		// Make into a tensor
-		let tensor = Tensor::from_data(TensorData::new(resized.to_vec(), shape), &self.device);
+		let tensor = Tensor::from_data(TensorData::new(frame.to_vec(), shape), &self.device);
 
 		// Normalize between [-1, 1]
 		let normalized = (tensor - Tensor::full(shape, 127, &self.device)) / 128;
