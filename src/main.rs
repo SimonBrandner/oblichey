@@ -3,7 +3,6 @@ mod geometry;
 mod gui;
 mod models;
 mod processors;
-mod utils;
 
 use camera::Frame;
 use clap::Parser;

@@ -1,6 +1,7 @@
+mod utils;
+
 use crate::geometry::Vec2D;
 use crate::processors::frame_processor::MODEL_INPUT_IMAGE_SIZE;
-use crate::utils::{average_brightness, convert_grey_to_rgb, convert_yuyv_to_rgb};
 use image::imageops::{crop, resize, FilterType};
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
@@ -9,6 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::{io, usize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use utils::{average_brightness, convert_grey_to_rgb, convert_yuyv_to_rgb};
 use v4l::buffer::Type;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
