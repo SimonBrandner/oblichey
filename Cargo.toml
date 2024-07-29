@@ -23,6 +23,7 @@ rayon = "1.10.0"
 winit = "0.27.5"
 strum = "0.26.3"
 strum_macros = "0.26.4"
+num = "0.4.3"
 
 [lints.rust]
 unsafe_code = "forbid"

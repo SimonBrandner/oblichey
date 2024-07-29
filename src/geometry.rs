@@ -1,20 +1,50 @@
-use std::ops::Add;
+use num::{NumCast, Zero};
+use std::ops::{Add, Mul, Sub};
 
-// The use of `usize` here probably needs to be reconsidered
 #[derive(Debug, Clone, Copy)]
-pub struct Vec2D {
-	pub x: usize,
-	pub y: usize,
+pub struct Vec2D<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
+	pub x: T,
+	pub y: T,
 }
 
-impl Vec2D {
-	pub fn new(x: usize, y: usize) -> Self {
+impl<T> Vec2D<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
+	pub fn new(x: T, y: T) -> Self {
 		Self { x, y }
 	}
 }
 
-impl Add<Vec2D> for Vec2D {
-	type Output = Self;
+impl<T> Add for Vec2D<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
+	type Output = Vec2D<T>;
 
 	fn add(self, rhs: Self) -> Self::Output {
 		Self {
@@ -25,13 +55,33 @@ impl Add<Vec2D> for Vec2D {
 }
 
 #[derive(Debug, Clone)]
-pub struct Rectangle {
-	pub min: Vec2D,
-	pub max: Vec2D,
+pub struct Rectangle<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
+	pub min: Vec2D<T>,
+	pub max: Vec2D<T>,
 }
 
-impl Rectangle {
-	pub fn intersection_over_union(&self, other: &Rectangle) -> f32 {
+impl<T> Rectangle<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
+	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> f32 {
 		if self.min.x > other.max.x {
 			return 0.0;
 		}
@@ -45,24 +95,27 @@ impl Rectangle {
 			return 0.0;
 		}
 
-		let intersection_min_x = self.min.x.max(other.min.x);
-		let intersection_min_y = self.min.y.max(other.min.y);
-		let intersection_max_x = self.max.x.min(other.max.x);
-		let intersection_max_y = self.max.y.min(other.max.y);
+		let intersection_min_x = std::cmp::max(self.min.x.clone(), other.min.x.clone());
+		let intersection_min_y = std::cmp::max(self.min.y.clone(), other.min.y.clone());
+		let intersection_max_x = std::cmp::min(self.max.x.clone(), other.max.x.clone());
+		let intersection_max_y = std::cmp::min(self.max.y.clone(), other.max.y.clone());
 
-		let intersection_width = (intersection_max_x - intersection_min_x).max(0);
-		let intersection_height = (intersection_max_y - intersection_min_y).max(0);
+		let intersection_width = std::cmp::max(intersection_max_x - intersection_min_x, T::zero());
+		let intersection_height = std::cmp::max(intersection_max_y - intersection_min_y, T::zero());
 		let intersection_area = intersection_width * intersection_height;
 
-		let self_area = (self.max.x - self.min.x) * (self.max.y - self.min.y);
-		let other_area = (other.max.x - other.min.x) * (other.max.y - other.min.y);
+		let self_area =
+			(self.max.x.clone() - self.min.x.clone()) * (self.max.y.clone() - self.min.y.clone());
+		let other_area = (other.max.x.clone() - other.min.x.clone())
+			* (other.max.y.clone() - other.min.y.clone());
 
-		let union_area = self_area + other_area - intersection_area;
+		let union_area = <f32 as NumCast>::from(self_area + other_area - intersection_area.clone())
+			.unwrap_or(0.0);
 
-		if union_area == 0 {
+		if union_area == 0.0 {
 			0.0
 		} else {
-			intersection_area as f32 / union_area as f32
+			<f32 as NumCast>::from(intersection_area).unwrap_or(0.0) / union_area
 		}
 	}
 }

@@ -10,7 +10,7 @@ use image::RgbImage;
 
 const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
-pub const MODEL_INPUT_IMAGE_SIZE: Vec2D = Vec2D { x: 640, y: 480 };
+pub const MODEL_INPUT_IMAGE_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 
 type Backend = NdArray<f32>;
 
@@ -41,12 +41,12 @@ impl FrameProcessor {
 
 	pub fn process_frame(&self, frame: &RgbImage) -> Vec<DetectedFace> {
 		assert_eq!(
-			frame.width() as usize,
+			frame.width(),
 			MODEL_INPUT_IMAGE_SIZE.x,
 			"Image width does not match network requirements!"
 		);
 		assert_eq!(
-			frame.height() as usize,
+			frame.height(),
 			MODEL_INPUT_IMAGE_SIZE.y,
 			"Image height does not match network requirements!"
 		);
@@ -68,7 +68,7 @@ impl FrameProcessor {
 	fn interpret_detector_output(
 		&self,
 		output: (Tensor<Backend, 3>, Tensor<Backend, 3>),
-	) -> Vec<Rectangle> {
+	) -> Vec<Rectangle<u32>> {
 		let (confidences, boxes) = output;
 		let confidences = confidences
 			.to_data()
@@ -91,12 +91,12 @@ impl FrameProcessor {
 
 			face_rectangles.push(Rectangle {
 				min: Vec2D {
-					x: (boxes[j + 0] * MODEL_INPUT_IMAGE_SIZE.x as f32) as usize,
-					y: (boxes[j + 1] * MODEL_INPUT_IMAGE_SIZE.y as f32) as usize,
+					x: (boxes[j + 0] * MODEL_INPUT_IMAGE_SIZE.x as f32) as u32,
+					y: (boxes[j + 1] * MODEL_INPUT_IMAGE_SIZE.y as f32) as u32,
 				},
 				max: Vec2D {
-					x: (boxes[j + 2] * MODEL_INPUT_IMAGE_SIZE.x as f32) as usize,
-					y: (boxes[j + 3] * MODEL_INPUT_IMAGE_SIZE.y as f32) as usize,
+					x: (boxes[j + 2] * MODEL_INPUT_IMAGE_SIZE.x as f32) as u32,
+					y: (boxes[j + 3] * MODEL_INPUT_IMAGE_SIZE.y as f32) as u32,
 				},
 			});
 		}
@@ -122,7 +122,11 @@ impl FrameProcessor {
 
 	fn normalize_detector_input(&self, frame: &Frame) -> Tensor<Backend, 4> {
 		// Shape of the image: height, width, channels
-		let shape = [MODEL_INPUT_IMAGE_SIZE.y, MODEL_INPUT_IMAGE_SIZE.x, 3];
+		let shape = [
+			MODEL_INPUT_IMAGE_SIZE.y as usize,
+			MODEL_INPUT_IMAGE_SIZE.x as usize,
+			3 as usize,
+		];
 
 		// Make into a tensor
 		let tensor = Tensor::from_data(TensorData::new(frame.to_vec(), shape), &self.device);

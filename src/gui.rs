@@ -7,8 +7,10 @@ use eframe::{
 	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
 	EventLoopBuilderHook, NativeOptions,
 };
+use num::{NumCast, Zero};
 use std::{
 	fmt::Display,
+	ops::{Add, Mul, Sub},
 	sync::{
 		atomic::{AtomicBool, Ordering},
 		Arc, Mutex,
@@ -20,11 +22,21 @@ trait ToVec2 {
 	fn to_pos2(&self) -> Pos2;
 }
 
-impl ToVec2 for Vec2D {
+impl<T> ToVec2 for Vec2D<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
 	fn to_pos2(&self) -> Pos2 {
 		Pos2 {
-			x: self.x as f32,
-			y: self.y as f32,
+			x: <f32 as NumCast>::from(self.x.clone()).unwrap_or(0.0),
+			y: <f32 as NumCast>::from(self.y.clone()).unwrap_or(0.0),
 		}
 	}
 }
@@ -33,7 +45,17 @@ trait ToRect {
 	fn to_rect(&self) -> Rect;
 }
 
-impl ToRect for Rectangle {
+impl<T> ToRect for Rectangle<T>
+where
+	f32: NumCast,
+	T: NumCast,
+	T: Add<Output = T>,
+	T: Mul<Output = T>,
+	T: Sub<Output = T>,
+	T: Ord,
+	T: Zero,
+	T: Clone,
+{
 	fn to_rect(&self) -> Rect {
 		Rect {
 			min: self.min.to_pos2(),
@@ -138,12 +160,12 @@ impl eframe::App for GUI {
 		drop(frame_lock);
 
 		assert_eq!(
-			image.width() as usize,
+			image.width(),
 			MODEL_INPUT_IMAGE_SIZE.x,
 			"Image width does not match network requirements!"
 		);
 		assert_eq!(
-			image.height() as usize,
+			image.height(),
 			MODEL_INPUT_IMAGE_SIZE.y,
 			"Image height does not match network requirements!"
 		);
@@ -162,7 +184,10 @@ impl eframe::App for GUI {
 			.frame(egui::Frame::none().inner_margin(0.0).outer_margin(0.0))
 			.show(ctx, |ui| {
 				let egui_image = ColorImage::from_rgb(
-					[MODEL_INPUT_IMAGE_SIZE.x, MODEL_INPUT_IMAGE_SIZE.y],
+					[
+						MODEL_INPUT_IMAGE_SIZE.x as usize,
+						MODEL_INPUT_IMAGE_SIZE.y as usize,
+					],
 					&image.into_raw(),
 				);
 				let image_texture =

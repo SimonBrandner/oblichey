@@ -17,7 +17,7 @@ pub struct Face;
 
 #[derive(Debug, Clone)]
 pub struct DetectedFace {
-	pub rectangle: Rectangle,
+	pub rectangle: Rectangle<u32>,
 	pub face: Face,
 }
 

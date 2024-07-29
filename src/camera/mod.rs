@@ -71,14 +71,14 @@ impl Display for Error {
 pub struct Camera<'a> {
 	stream: Stream<'a>,
 	pixel_format: SupportedPixelFormat,
-	frame_size: Vec2D,
+	frame_size: Vec2D<u32>,
 }
 
 impl<'a> Camera<'a> {
 	pub fn new() -> Result<Self, Error> {
 		let mut device = Device::with_path(CAMERA_PATH)?;
 		let mut format = device.format()?;
-		let frame_size = Vec2D::new(format.width as usize, format.height as usize);
+		let frame_size = Vec2D::new(format.width, format.height);
 
 		let mut chosen_pixel_format: Option<SupportedPixelFormat> = None;
 		for pixel_format in SupportedPixelFormat::iter() {
@@ -115,7 +115,7 @@ impl<'a> Camera<'a> {
 		self.pixel_format.clone()
 	}
 
-	pub fn get_frame_size(&self) -> Vec2D {
+	pub fn get_frame_size(&self) -> Vec2D<u32> {
 		self.frame_size.clone()
 	}
 }
@@ -166,26 +166,18 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 		let model_aspect_ratio = MODEL_INPUT_IMAGE_SIZE.x as f32 / MODEL_INPUT_IMAGE_SIZE.y as f32;
 		let (new_size, new_offset) = if original_aspect_ratio > model_aspect_ratio {
 			let size = Vec2D::new(
-				((MODEL_INPUT_IMAGE_SIZE.y as f32 / frame_size.y as f32) * frame_size.x as f32)
-					as usize,
+				(MODEL_INPUT_IMAGE_SIZE.y / frame_size.y) * frame_size.x,
 				MODEL_INPUT_IMAGE_SIZE.y,
 			);
-			let offset = Vec2D::new(
-				((size.x as f32 - MODEL_INPUT_IMAGE_SIZE.x as f32) / 2.0) as usize,
-				0,
-			);
+			let offset = Vec2D::new((size.x - MODEL_INPUT_IMAGE_SIZE.x) / 2, 0);
 
 			(size, offset)
 		} else {
 			let size = Vec2D::new(
 				MODEL_INPUT_IMAGE_SIZE.x,
-				((MODEL_INPUT_IMAGE_SIZE.x as f32 / frame_size.x as f32) * frame_size.y as f32)
-					as usize,
+				(MODEL_INPUT_IMAGE_SIZE.x / frame_size.x) * frame_size.y,
 			);
-			let offset = Vec2D::new(
-				0,
-				((size.y as f32 - MODEL_INPUT_IMAGE_SIZE.y as f32) / 2.0) as usize,
-			);
+			let offset = Vec2D::new(0, (size.y - MODEL_INPUT_IMAGE_SIZE.y) / 2);
 
 			(size, offset)
 		};
