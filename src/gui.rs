@@ -70,7 +70,7 @@ pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
 	detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
 	finished: Arc<AtomicBool>,
-) -> Result<(), Error> {
+) {
 	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
 		event_loop_builder.with_any_thread(true);
 	}));
@@ -88,7 +88,6 @@ pub fn start(
 		},
 		Box::new(|_| Box::new(GUI::new(frame, detected_faces, finished))),
 	);
-	Ok(())
 }
 
 struct GUI {

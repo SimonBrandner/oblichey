@@ -50,11 +50,7 @@ fn main() {
 		let detected_faces_clone = detected_faces.clone();
 		let frame_clone = frame.clone();
 		let finished_clone = finished.clone();
-		thread::spawn(move || {
-			if let Err(e) = gui::start(frame_clone, detected_faces_clone, finished_clone) {
-				panic!("Error during running GUI: {e}");
-			}
-		});
+		thread::spawn(move || gui::start(frame_clone, detected_faces_clone, finished_clone));
 	}
 
 	let _ = thread::spawn(move || processors::start(frame, detected_faces, finished)).join();
