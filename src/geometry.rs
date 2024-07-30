@@ -1,10 +1,25 @@
 use num::{NumCast, Zero};
-use std::ops::{Add, Mul, Sub};
+use std::{
+	fmt::Debug,
+	ops::{Add, Mul, Sub},
+};
 
-#[derive(Debug, Clone, Copy)]
-pub struct Vec2D<T>
+pub trait Vec2DNumber
 where
-	f32: NumCast,
+	Self: NumCast,
+	Self: Add<Output = Self>,
+	Self: Mul<Output = Self>,
+	Self: Sub<Output = Self>,
+	Self: Ord,
+	Self: Zero,
+	Self: Clone,
+	Self: Debug,
+	Self: Copy,
+{
+}
+
+impl<T> Vec2DNumber for T
+where
 	T: NumCast,
 	T: Add<Output = T>,
 	T: Mul<Output = T>,
@@ -12,38 +27,24 @@ where
 	T: Ord,
 	T: Zero,
 	T: Clone,
+	T: Debug,
+	T: Copy,
 {
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Vec2D<T: Vec2DNumber> {
 	pub x: T,
 	pub y: T,
 }
 
-impl<T> Vec2D<T>
-where
-	f32: NumCast,
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-{
+impl<T: Vec2DNumber> Vec2D<T> {
 	pub fn new(x: T, y: T) -> Self {
 		Self { x, y }
 	}
 }
 
-impl<T> Add for Vec2D<T>
-where
-	f32: NumCast,
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-{
+impl<T: Vec2DNumber> Add for Vec2D<T> {
 	type Output = Vec2D<T>;
 
 	fn add(self, rhs: Self) -> Self::Output {
@@ -55,32 +56,12 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct Rectangle<T>
-where
-	f32: NumCast,
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-{
+pub struct Rectangle<T: Vec2DNumber> {
 	pub min: Vec2D<T>,
 	pub max: Vec2D<T>,
 }
 
-impl<T> Rectangle<T>
-where
-	f32: NumCast,
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-{
+impl<T: Vec2DNumber> Rectangle<T> {
 	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> f32 {
 		if self.min.x > other.max.x {
 			return 0.0;

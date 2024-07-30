@@ -1,16 +1,15 @@
 use crate::{
 	camera::{self, Frame},
-	geometry::{Rectangle, Vec2D},
+	geometry::{Rectangle, Vec2D, Vec2DNumber},
 	processors::{frame_processor::MODEL_INPUT_IMAGE_SIZE, DetectedFace},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
 	EventLoopBuilderHook, NativeOptions,
 };
-use num::{NumCast, Zero};
+use num::NumCast;
 use std::{
 	fmt::Display,
-	ops::{Add, Mul, Sub},
 	sync::{
 		atomic::{AtomicBool, Ordering},
 		Arc, Mutex,
@@ -22,17 +21,7 @@ trait ToVec2 {
 	fn to_pos2(&self) -> Pos2;
 }
 
-impl<T> ToVec2 for Vec2D<T>
-where
-	f32: NumCast,
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-{
+impl<T: Vec2DNumber> ToVec2 for Vec2D<T> {
 	fn to_pos2(&self) -> Pos2 {
 		Pos2 {
 			x: <f32 as NumCast>::from(self.x.clone()).unwrap_or(0.0),
@@ -45,17 +34,7 @@ trait ToRect {
 	fn to_rect(&self) -> Rect;
 }
 
-impl<T> ToRect for Rectangle<T>
-where
-	f32: NumCast,
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-{
+impl<T: Vec2DNumber> ToRect for Rectangle<T> {
 	fn to_rect(&self) -> Rect {
 		Rect {
 			min: self.min.to_pos2(),
