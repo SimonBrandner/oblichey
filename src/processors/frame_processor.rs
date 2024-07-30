@@ -91,14 +91,14 @@ impl FrameProcessor {
 			}
 
 			face_rectangles.push(Rectangle {
-				min: Vec2D {
-					x: (boxes[j + 0] * DETECTOR_INPUT_SIZE.x as f32) as u32,
-					y: (boxes[j + 1] * DETECTOR_INPUT_SIZE.y as f32) as u32,
-				},
-				max: Vec2D {
-					x: (boxes[j + 2] * DETECTOR_INPUT_SIZE.x as f32) as u32,
-					y: (boxes[j + 3] * DETECTOR_INPUT_SIZE.y as f32) as u32,
-				},
+				min: Vec2D::new(
+					(boxes[j + 0] * DETECTOR_INPUT_SIZE.x as f32) as u32,
+					(boxes[j + 1] * DETECTOR_INPUT_SIZE.y as f32) as u32,
+				),
+				max: Vec2D::new(
+					(boxes[j + 2] * DETECTOR_INPUT_SIZE.x as f32) as u32,
+					(boxes[j + 3] * DETECTOR_INPUT_SIZE.y as f32) as u32,
+				),
 			});
 		}
 
