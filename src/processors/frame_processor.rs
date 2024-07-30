@@ -15,11 +15,6 @@ pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 
 type Backend = NdArray<f32>;
 
-#[derive(Debug, Clone)]
-pub struct ProcessorState {
-	pub detected_faces: Vec<DetectedFace>,
-}
-
 #[derive(Debug)]
 pub struct FrameProcessor {
 	device: NdArrayDevice,
