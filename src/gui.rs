@@ -1,7 +1,7 @@
 use crate::{
 	camera::{self, Frame},
 	geometry::{Rectangle, Vec2D, Vec2DNumber},
-	processors::{frame_processor::MODEL_INPUT_IMAGE_SIZE, DetectedFace},
+	processors::{frame_processor::DETECTOR_INPUT_SIZE, DetectedFace},
 };
 use eframe::{
 	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
@@ -81,8 +81,8 @@ pub fn start(
 			event_loop_builder,
 			resizable: false,
 			initial_window_size: Some(Vec2::new(
-				MODEL_INPUT_IMAGE_SIZE.x as f32,
-				MODEL_INPUT_IMAGE_SIZE.y as f32,
+				DETECTOR_INPUT_SIZE.x as f32,
+				DETECTOR_INPUT_SIZE.y as f32,
 			)),
 			..NativeOptions::default()
 		},
@@ -139,12 +139,12 @@ impl eframe::App for GUI {
 
 		assert_eq!(
 			image.width(),
-			MODEL_INPUT_IMAGE_SIZE.x,
+			DETECTOR_INPUT_SIZE.x,
 			"Image width does not match network requirements!"
 		);
 		assert_eq!(
 			image.height(),
-			MODEL_INPUT_IMAGE_SIZE.y,
+			DETECTOR_INPUT_SIZE.y,
 			"Image height does not match network requirements!"
 		);
 
@@ -163,8 +163,8 @@ impl eframe::App for GUI {
 			.show(ctx, |ui| {
 				let egui_image = ColorImage::from_rgb(
 					[
-						MODEL_INPUT_IMAGE_SIZE.x as usize,
-						MODEL_INPUT_IMAGE_SIZE.y as usize,
+						DETECTOR_INPUT_SIZE.x as usize,
+						DETECTOR_INPUT_SIZE.y as usize,
 					],
 					&image.into_raw(),
 				);
@@ -174,10 +174,7 @@ impl eframe::App for GUI {
 
 				ui.image(
 					&image_texture,
-					Vec2::new(
-						MODEL_INPUT_IMAGE_SIZE.x as f32,
-						MODEL_INPUT_IMAGE_SIZE.y as f32,
-					),
+					Vec2::new(DETECTOR_INPUT_SIZE.x as f32, DETECTOR_INPUT_SIZE.y as f32),
 				);
 				for face in detected_faces {
 					ui.painter().rect_stroke(

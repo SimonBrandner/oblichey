@@ -1,7 +1,7 @@
 mod utils;
 
 use crate::geometry::Vec2D;
-use crate::processors::frame_processor::MODEL_INPUT_IMAGE_SIZE;
+use crate::processors::frame_processor::DETECTOR_INPUT_SIZE;
 use image::imageops::{crop, resize, FilterType};
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
@@ -167,23 +167,21 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 
 		// Calculate how to resize and crop
 		let original_aspect_ratio = frame_size.x as f32 / frame_size.y as f32;
-		let model_aspect_ratio = MODEL_INPUT_IMAGE_SIZE.x as f32 / MODEL_INPUT_IMAGE_SIZE.y as f32;
+		let model_aspect_ratio = DETECTOR_INPUT_SIZE.x as f32 / DETECTOR_INPUT_SIZE.y as f32;
 		let (new_size, new_offset) = if original_aspect_ratio > model_aspect_ratio {
 			let size = Vec2D::new(
-				((MODEL_INPUT_IMAGE_SIZE.y as f32 / frame_size.y as f32) * frame_size.x as f32)
-					as u32,
-				MODEL_INPUT_IMAGE_SIZE.y,
+				((DETECTOR_INPUT_SIZE.y as f32 / frame_size.y as f32) * frame_size.x as f32) as u32,
+				DETECTOR_INPUT_SIZE.y,
 			);
-			let offset = Vec2D::new((size.x - MODEL_INPUT_IMAGE_SIZE.x) / 2, 0);
+			let offset = Vec2D::new((size.x - DETECTOR_INPUT_SIZE.x) / 2, 0);
 
 			(size, offset)
 		} else {
 			let size = Vec2D::new(
-				MODEL_INPUT_IMAGE_SIZE.x,
-				((MODEL_INPUT_IMAGE_SIZE.x as f32 / frame_size.x as f32) * frame_size.y as f32)
-					as u32,
+				DETECTOR_INPUT_SIZE.x,
+				((DETECTOR_INPUT_SIZE.x as f32 / frame_size.x as f32) * frame_size.y as f32) as u32,
 			);
-			let offset = Vec2D::new(0, (size.y - MODEL_INPUT_IMAGE_SIZE.y) / 2);
+			let offset = Vec2D::new(0, (size.y - DETECTOR_INPUT_SIZE.y) / 2);
 
 			(size, offset)
 		};
@@ -201,8 +199,8 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 			&mut resized,
 			new_offset.x as u32,
 			new_offset.y as u32,
-			MODEL_INPUT_IMAGE_SIZE.x as u32,
-			MODEL_INPUT_IMAGE_SIZE.y as u32,
+			DETECTOR_INPUT_SIZE.x as u32,
+			DETECTOR_INPUT_SIZE.y as u32,
 		);
 
 		// Write the frame into a shared buffer
