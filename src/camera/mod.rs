@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::{io, usize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use utils::{average_brightness, convert_grey_to_rgb, convert_yuyv_to_rgb};
+use utils::{brightness, convert_grey_to_rgb, convert_yuyv_to_rgb};
 use v4l::buffer::Type;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
@@ -20,7 +20,7 @@ use v4l::{Device, FourCC};
 // TODO: Make this user configurable
 const CAMERA_PATH: &str = "/dev/video2";
 /// Some (at least mine) IR cameras occasionally produce very dark frames which we ignore
-const FRAME_BRIGHTNESS_MINIMUM: f32 = 48.0;
+const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
 
 pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
@@ -131,6 +131,7 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 	let pixel_format = camera.get_pixel_format();
 	let frame_size = camera.get_frame_size();
 
+	let mut last_brightness = 255.0;
 	loop {
 		if finished.load(Ordering::SeqCst) {
 			return;
@@ -151,9 +152,12 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 				convert_yuyv_to_rgb(&new_frame, frame_size.x as u32, frame_size.y as u32)
 			}
 			SupportedPixelFormat::GREY => {
-				let average_brightness =
-					average_brightness(&new_frame, frame_size.x as u32, frame_size.y as u32);
-				if average_brightness < FRAME_BRIGHTNESS_MINIMUM {
+				// We need to ignore very dark frames in some way. It's difficult to pick a single
+				// threshold for "too dark", so we instead measure the brightness decrease
+				let brightness = brightness(&new_frame, frame_size.x as u32, frame_size.y as u32);
+				let brightness_decrease = last_brightness - brightness;
+				last_brightness = brightness;
+				if brightness_decrease > MAX_BRIGHTNESS_DECREASE {
 					continue;
 				}
 

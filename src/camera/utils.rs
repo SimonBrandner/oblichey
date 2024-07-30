@@ -2,7 +2,7 @@ use crate::camera::Frame;
 use image::ImageBuffer;
 use rayon::prelude::*;
 
-pub fn average_brightness(grey_data: &[u8], width: u32, height: u32) -> f32 {
+pub fn brightness(grey_data: &[u8], width: u32, height: u32) -> f32 {
 	let mut sum = 0.0;
 	for pixel in grey_data {
 		sum += *pixel as f32;
