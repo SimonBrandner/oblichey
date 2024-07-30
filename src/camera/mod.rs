@@ -166,7 +166,8 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 		let model_aspect_ratio = MODEL_INPUT_IMAGE_SIZE.x as f32 / MODEL_INPUT_IMAGE_SIZE.y as f32;
 		let (new_size, new_offset) = if original_aspect_ratio > model_aspect_ratio {
 			let size = Vec2D::new(
-				(MODEL_INPUT_IMAGE_SIZE.y / frame_size.y) * frame_size.x,
+				((MODEL_INPUT_IMAGE_SIZE.y as f32 / frame_size.y as f32) * frame_size.x as f32)
+					as u32,
 				MODEL_INPUT_IMAGE_SIZE.y,
 			);
 			let offset = Vec2D::new((size.x - MODEL_INPUT_IMAGE_SIZE.x) / 2, 0);
@@ -175,7 +176,8 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 		} else {
 			let size = Vec2D::new(
 				MODEL_INPUT_IMAGE_SIZE.x,
-				(MODEL_INPUT_IMAGE_SIZE.x / frame_size.x) * frame_size.y,
+				((MODEL_INPUT_IMAGE_SIZE.x as f32 / frame_size.x as f32) * frame_size.y as f32)
+					as u32,
 			);
 			let offset = Vec2D::new(0, (size.y - MODEL_INPUT_IMAGE_SIZE.y) / 2);
 
