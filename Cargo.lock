@@ -1947,6 +1947,7 @@ dependencies = [
  "burn",
  "burn-import",
  "burn-ndarray",
+ "burn-wgpu",
  "chrono",
  "clap",
  "eframe",

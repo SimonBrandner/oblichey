@@ -4,8 +4,8 @@ use crate::{
 	geometry::{Rectangle, Vec2D},
 	models::{detector, recognizer},
 };
+use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use burn::tensor::{Tensor, TensorData};
-use burn_ndarray::{NdArray, NdArrayDevice};
 use image::RgbImage;
 
 const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
@@ -13,18 +13,18 @@ const CONFIDENCE_THRESHOLD: f32 = 0.95;
 /// The size of the image the detector model takes as input
 pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 
-type Backend = NdArray<f32>;
+type Backend = Wgpu<f32, i32>;
 
 #[derive(Debug)]
 pub struct FrameProcessor {
-	device: NdArrayDevice,
+	device: WgpuDevice,
 	detector: detector::Model<Backend>,
 	recognizer: recognizer::Model<Backend>,
 }
 
 impl FrameProcessor {
 	pub fn new() -> Self {
-		let device = NdArrayDevice::default();
+		let device = WgpuDevice::default();
 		let detector: detector::Model<Backend> = detector::Model::default();
 		let recognizer: recognizer::Model<Backend> = recognizer::Model::default();
 
@@ -47,9 +47,9 @@ impl FrameProcessor {
 			"Image height does not match network requirements!"
 		);
 
-		let input = self.normalize_detector_input(frame);
-		let output = self.detector.forward(input);
-		let face_rectangles = self.interpret_detector_output(output);
+		let detector_input = self.normalize_detector_input(frame);
+		let detector_output = self.detector.forward(detector_input);
+		let face_rectangles = self.interpret_detector_output(detector_output);
 
 		// For now we fill the `face` field with `default()`
 		face_rectangles
@@ -128,7 +128,7 @@ impl FrameProcessor {
 		let tensor = Tensor::from_data(TensorData::new(frame.to_vec(), shape), &self.device);
 
 		// Normalize between [-1, 1]
-		let normalized = (tensor - Tensor::full(shape, 127, &self.device)) / 128;
+		let normalized = (tensor - Tensor::full(shape, 127, &self.device)) / 128.0;
 
 		// Reorder dimension to have: channels, height, width
 		let permutated = normalized.permute([2, 0, 1]);
