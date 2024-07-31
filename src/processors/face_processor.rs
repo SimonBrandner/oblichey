@@ -2,7 +2,7 @@ use super::DetectedFace;
 use std::fmt::Debug;
 
 pub trait FaceProcessor: Debug {
-	fn process_detected_faces(&self, detected_faces: &[DetectedFace]);
+	fn process_detected_faces(&mut self, detected_faces: &[DetectedFace]);
 	fn is_finished(&self) -> bool;
 }
 
@@ -25,7 +25,7 @@ impl ScanProcessor {
 }
 
 impl FaceProcessor for ScanProcessor {
-	fn process_detected_faces(&self, detected_faces: &[DetectedFace]) {}
+	fn process_detected_faces(&mut self, detected_faces: &[DetectedFace]) {}
 
 	fn is_finished(&self) -> bool {
 		self.result.is_some()
@@ -51,7 +51,7 @@ impl AuthProcessor {
 }
 
 impl FaceProcessor for AuthProcessor {
-	fn process_detected_faces(&self, detected_faces: &[DetectedFace]) {}
+	fn process_detected_faces(&mut self, detected_faces: &[DetectedFace]) {}
 
 	fn is_finished(&self) -> bool {
 		self.result.is_some()

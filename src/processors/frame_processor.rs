@@ -3,15 +3,21 @@ use crate::{
 	camera::Frame,
 	geometry::{Rectangle, Vec2D},
 	models::{detector, recognizer},
+	processors::{Embedding, EmbeddingData},
 };
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use burn::tensor::{Tensor, TensorData};
-use image::RgbImage;
+use image::{
+	imageops::{crop, resize, FilterType},
+	RgbImage,
+};
 
 const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
 /// The size of the image the detector model takes as input
 pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
+/// The size of the image the recognizer model takes as input
+pub const RECOGNIZER_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 128, y: 128 };
 
 type Backend = Wgpu<f32, i32>;
 
@@ -51,14 +57,29 @@ impl FrameProcessor {
 		let detector_output = self.detector.forward(detector_input);
 		let face_rectangles = self.interpret_detector_output(detector_output);
 
-		// For now we fill the `face` field with `default()`
-		face_rectangles
-			.into_iter()
-			.map(|rectangle| DetectedFace {
-				face: Face::default(),
-				rectangle,
-			})
-			.collect()
+		let mut detected_faces = Vec::new();
+		let mut frame = frame.clone();
+		for rectangle in face_rectangles {
+			let recognizer_input = self.normalize_recognizer_input(&mut frame, &rectangle);
+			let recognizer_output = self.recognizer.forward(recognizer_input);
+			let face = self.interpret_recognizer_output(&recognizer_output);
+
+			detected_faces.push(DetectedFace { rectangle, face })
+		}
+
+		detected_faces
+	}
+
+	fn interpret_recognizer_output(&self, output: &Tensor<Backend, 2>) -> Face {
+		let data = output
+			.to_data()
+			.to_vec::<f32>()
+			.expect("Embedding has an unexpected shape!");
+		let embedding_data =
+			EmbeddingData::try_from(data).expect("Embedding has an unexpected shape!");
+		let embedding = Embedding::new(embedding_data);
+
+		Face { embedding }
 	}
 
 	fn interpret_detector_output(
@@ -126,6 +147,48 @@ impl FrameProcessor {
 
 		// Make into a tensor
 		let tensor = Tensor::from_data(TensorData::new(frame.to_vec(), shape), &self.device);
+
+		// Normalize between [-1, 1]
+		let normalized = (tensor - Tensor::full(shape, 127, &self.device)) / 128.0;
+
+		// Reorder dimension to have: channels, height, width
+		let permutated = normalized.permute([2, 0, 1]);
+
+		// Make the tensor the correct shape: batch, channels, height, width
+		let unsqueezed = permutated.unsqueeze::<4>();
+
+		unsqueezed
+	}
+
+	fn normalize_recognizer_input(
+		&self,
+		frame: &mut Frame,
+		face_rectangle: &Rectangle<u32>,
+	) -> Tensor<Backend, 4> {
+		let cropped = crop(
+			frame,
+			face_rectangle.min.x,
+			face_rectangle.min.y,
+			face_rectangle.max.x + face_rectangle.min.x,
+			face_rectangle.max.y + face_rectangle.min.y,
+		);
+
+		let resized = resize(
+			&cropped.to_image(),
+			RECOGNIZER_INPUT_SIZE.x,
+			RECOGNIZER_INPUT_SIZE.y,
+			FilterType::CatmullRom,
+		);
+
+		// Shape of the image: height, width, channels
+		let shape = [
+			RECOGNIZER_INPUT_SIZE.y as usize,
+			RECOGNIZER_INPUT_SIZE.x as usize,
+			3 as usize,
+		];
+
+		// Make into a tensor
+		let tensor = Tensor::from_data(TensorData::new(resized.to_vec(), shape), &self.device);
 
 		// Normalize between [-1, 1]
 		let normalized = (tensor - Tensor::full(shape, 127, &self.device)) / 128.0;
