@@ -5,19 +5,18 @@ edition = "2021"
 build = "src/build.rs"
 
 [build-dependencies]
-burn-import = { git = "https://github.com/tracel-ai/burn", branch = "main" }
+burn-import = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205fbc83b61da383308a43" }
 
 [dependencies]
 v4l = "0.14.0"
 chrono = "0.4.38"
 clap = { version = "4.4.11", features = ["derive"] }
 image = { version = "0.24", default-features = false }
-burn = { git = "https://github.com/tracel-ai/burn", branch = "main", features = [
+burn = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205fbc83b61da383308a43", features = [
   "wgpu",
 ] }
-burn-ndarray = { git = "https://github.com/tracel-ai/burn", branch = "main" }
-burn-import = { git = "https://github.com/tracel-ai/burn", branch = "main" }
-burn-wgpu = { git = "https://github.com/tracel-ai/burn", branch = "main" }
+burn-import = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205fbc83b61da383308a43" }
+burn-wgpu = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205fbc83b61da383308a43" }
 eframe = { version = "0.20", default-features = false, features = [
   "glow",
   "default_fonts",
