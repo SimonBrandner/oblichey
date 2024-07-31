@@ -15,7 +15,7 @@
           inherit system;
         };
       in {
-        packages.default = nixpkgs.legacyPackages.${system}.callPackage ./nix/package.nix {};
+        packages.default = nixpkgs.legacyPackages.${system}.callPackage ./nix/package.nix {inherit pkgs;};
         devShells.default = import ./nix/shell.nix {inherit pkgs;};
       }
     )
