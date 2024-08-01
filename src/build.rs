@@ -1,13 +1,47 @@
 use burn_import::onnx::ModelGen;
+use std::{
+	env,
+	fs::{self, create_dir},
+	path::Path,
+};
+
+const MODEL_NAMES: [&str; 2] = ["detector", "recognizer"];
+const MODELS_OUT_DIR: &str = "src/models";
+const ONNX_DIR: &str = "models";
+const WEIGHTS_DIR: &str = "weights";
 
 fn main() {
-	ModelGen::new()
-		.input("./models/detector.onnx")
-		.out_dir("./src/models/")
-		.run_from_script();
+	let out_dir = env::var("OUT_DIR").expect("OUT_DIR not defined");
+	let profile = env::var("PROFILE").expect("PROFILE not defined");
 
+	let source_weights_dir = Path::new(&out_dir).join(MODELS_OUT_DIR);
+	let new_weights_dir = Path::new("target").join(profile).join(WEIGHTS_DIR);
+
+	// Create the weights directory unless it already exists
+	let _ = create_dir(new_weights_dir.clone());
+
+	for model_name in MODEL_NAMES {
+		import_onnx_model(model_name);
+		copy_weights_next_to_executable(model_name, &source_weights_dir, &new_weights_dir);
+	}
+}
+
+fn import_onnx_model(model_name: &str) {
 	ModelGen::new()
-		.input("./models/recognizer.onnx")
-		.out_dir("./src/models/")
+		.input(&(String::new() + ONNX_DIR + "/" + model_name + ".onnx"))
+		.out_dir(MODELS_OUT_DIR)
 		.run_from_script();
+}
+
+fn copy_weights_next_to_executable(
+	model_name: &str,
+	source_weights_dir: &Path,
+	new_weights_dir: &Path,
+) {
+	let weights_file_name = String::new() + model_name + ".mpk";
+	let source_path = source_weights_dir.join(weights_file_name.clone());
+	let destination_path = new_weights_dir.join(weights_file_name);
+
+	fs::copy(source_path, destination_path)
+		.expect("Failed to copy weights to the weights directory!");
 }

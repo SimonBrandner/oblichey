@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use super::{DetectedFace, Face};
 use crate::{
 	camera::Frame,
@@ -12,12 +14,27 @@ use image::{
 	RgbImage,
 };
 
+const WEIGHTS_DIRECTORY_NAME: &str = "weights";
 const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
 /// The size of the image the detector model takes as input
 pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 /// The size of the image the recognizer model takes as input
 pub const RECOGNIZER_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 128, y: 128 };
+
+fn get_weights_file(model_name: &str) -> String {
+	let path_to_executable = std::env::current_exe().expect("Could not get path to executable!");
+	let path_to_dir_with_executable = path_to_executable
+		.parent()
+		.expect("Could not get parent directory!");
+
+	path_to_dir_with_executable
+		.join(WEIGHTS_DIRECTORY_NAME)
+		.join(String::new() + model_name + ".mpk")
+		.to_str()
+		.expect("Failed to get valid UTF-8 string from path!")
+		.to_owned()
+}
 
 type Backend = Wgpu<f32, i32>;
 
@@ -31,8 +48,10 @@ pub struct FrameProcessor {
 impl FrameProcessor {
 	pub fn new() -> Self {
 		let device = WgpuDevice::default();
-		let detector: detector::Model<Backend> = detector::Model::default();
-		let recognizer: recognizer::Model<Backend> = recognizer::Model::default();
+		let detector: detector::Model<Backend> =
+			detector::Model::from_file(&get_weights_file("detector"), &device);
+		let recognizer: recognizer::Model<Backend> =
+			recognizer::Model::from_file(&get_weights_file("recognizer"), &device);
 
 		Self {
 			device,
