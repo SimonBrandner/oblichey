@@ -19,4 +19,5 @@ pkgs.mkShell rec {
   ];
   LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
   LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
+  RUST_BACKTRACE = 1;
 }
