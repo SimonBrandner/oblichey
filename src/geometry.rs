@@ -1,7 +1,7 @@
 use num::{NumCast, Zero};
 use std::{
 	fmt::Debug,
-	ops::{Add, Mul, Sub},
+	ops::{Add, Mul, Neg, Sub},
 };
 
 pub trait Vec2DNumber
@@ -42,6 +42,17 @@ impl<T: Vec2DNumber> Vec2D<T> {
 	pub fn new(x: T, y: T) -> Self {
 		Self { x, y }
 	}
+
+	pub fn to_i32(&self) -> Vec2D<i32> {
+		Vec2D::new(
+			<i32 as NumCast>::from(self.x).unwrap_or(0),
+			<i32 as NumCast>::from(self.y).unwrap_or(0),
+		)
+	}
+
+	pub fn with_flipped_axes(&self) -> Self {
+		Self::new(self.y, self.x)
+	}
 }
 
 impl<T: Vec2DNumber> Add for Vec2D<T> {
@@ -55,6 +66,28 @@ impl<T: Vec2DNumber> Add for Vec2D<T> {
 	}
 }
 
+impl<T: Vec2DNumber> Sub for Vec2D<T> {
+	type Output = Vec2D<T>;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self {
+			x: self.x - rhs.x,
+			y: self.y - rhs.y,
+		}
+	}
+}
+
+impl<T: Vec2DNumber + Neg<Output = T>> Neg for Vec2D<T> {
+	type Output = Vec2D<T>;
+
+	fn neg(self) -> Self::Output {
+		Self {
+			x: -self.x,
+			y: -self.y,
+		}
+	}
+}
+
 #[derive(Debug, Clone)]
 pub struct Rectangle<T: Vec2DNumber> {
 	pub min: Vec2D<T>,
@@ -64,6 +97,10 @@ pub struct Rectangle<T: Vec2DNumber> {
 impl<T: Vec2DNumber> Rectangle<T> {
 	pub fn new(min: Vec2D<T>, max: Vec2D<T>) -> Self {
 		Self { min, max }
+	}
+
+	pub fn to_i32(&self) -> Rectangle<i32> {
+		Rectangle::new(self.min.to_i32(), self.max.to_i32())
 	}
 
 	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> f32 {
