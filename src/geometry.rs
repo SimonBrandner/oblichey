@@ -62,6 +62,10 @@ pub struct Rectangle<T: Vec2DNumber> {
 }
 
 impl<T: Vec2DNumber> Rectangle<T> {
+	pub fn new(min: Vec2D<T>, max: Vec2D<T>) -> Self {
+		Self { min, max }
+	}
+
 	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> f32 {
 		if self.min.x > other.max.x {
 			return 0.0;
