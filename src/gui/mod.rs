@@ -1,14 +1,18 @@
+mod poi;
+
 use crate::{
 	camera::{self, Frame},
 	geometry::{Rectangle, Vec2D, Vec2DNumber},
+	gui::poi::draw_poi_square,
 	processors::{frame_processor::DETECTOR_INPUT_SIZE, DetectedFace},
 };
 use eframe::{
-	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Stroke, Vec2},
+	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Vec2},
 	EventLoopBuilderHook, NativeOptions,
 };
 use num::NumCast;
 use std::{
+	cmp::{max, min},
 	fmt::Display,
 	sync::{
 		atomic::{AtomicBool, Ordering},
@@ -36,17 +40,18 @@ trait ToRect {
 
 impl<T: Vec2DNumber> ToRect for Rectangle<T> {
 	fn to_rect(&self) -> Rect {
+		// EGUI requires min to be the top left corner and max to be the bottom right corner
+		let min_position = Vec2D::new(min(self.min.x, self.max.x), min(self.min.y, self.max.y));
+		let max_position = Vec2D::new(max(self.min.x, self.max.x), max(self.min.y, self.max.y));
+
 		Rect {
-			min: self.min.to_pos2(),
-			max: self.max.to_pos2(),
+			min: min_position.to_pos2(),
+			max: max_position.to_pos2(),
 		}
 	}
 }
 
-const FACE_RECTANGLE_STROKE: Stroke = Stroke {
-	width: 4.0,
-	color: Color32::from_rgb(255, 0, 0),
-};
+const FACE_RECTANGLE_COLOR: Color32 = Color32::from_rgb(255, 255, 0);
 
 pub enum Error {
 	Camera(camera::Error),
@@ -177,11 +182,14 @@ impl eframe::App for GUI {
 					Vec2::new(DETECTOR_INPUT_SIZE.x as f32, DETECTOR_INPUT_SIZE.y as f32),
 				);
 				for face in detected_faces {
-					ui.painter().rect_stroke(
-						face.rectangle.to_rect(),
-						Rounding::default(),
-						FACE_RECTANGLE_STROKE,
-					);
+					let rectangles = draw_poi_square(face.rectangle);
+					for rectangle in rectangles {
+						ui.painter().rect_filled(
+							rectangle.to_rect(),
+							Rounding::default(),
+							FACE_RECTANGLE_COLOR,
+						);
+					}
 				}
 			});
 		ctx.request_repaint();

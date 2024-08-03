@@ -1,6 +1,8 @@
 use super::DetectedFace;
 use std::fmt::Debug;
 
+const SIMILARITY_THRESHOLD: f32 = 0.51;
+
 pub trait FaceProcessor: Debug {
 	fn process_detected_faces(&mut self, detected_faces: &[DetectedFace]);
 	fn is_finished(&self) -> bool;
