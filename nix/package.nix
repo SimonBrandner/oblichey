@@ -12,8 +12,8 @@ in
     cargoLock = {
       lockFile = ../Cargo.lock;
       outputHashes = {
-        "burn-0.14.0" = "sha256-5ssNI+QvMpEeU7JpK1KVtBpTgXKbaqTUYTBePTL+J24=";
-        "cubecl-0.1.1" = "sha256-xgwXyHAKSxf4rTF/Svpb61IOvxQUiV9xmOXk5WHDdjY=";
+        "burn-0.14.0" = "sha256-ChBlLKeq0WuINP+6mfZ0vFMYOKWnqT2dEMuM0UZJnbc=";
+        "cubecl-0.1.1" = "sha256-tLNC2KRRYrRRKL9HkhTYHg8tvxkJDm9fM8GrSQWNXeM=";
       };
     };
     src = lib.cleanSource ../.;
