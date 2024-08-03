@@ -1946,7 +1946,6 @@ version = "0.0.1"
 dependencies = [
  "burn",
  "burn-import",
- "burn-wgpu",
  "chrono",
  "clap",
  "eframe",

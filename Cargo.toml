@@ -16,7 +16,6 @@ burn = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205
   "wgpu",
 ] }
 burn-import = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205fbc83b61da383308a43" }
-burn-wgpu = { git = "https://github.com/tracel-ai/burn", rev = "4a3fc9d4a094bc7ce4205fbc83b61da383308a43" }
 eframe = { version = "0.20", default-features = false, features = [
   "glow",
   "default_fonts",
