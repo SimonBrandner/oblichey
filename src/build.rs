@@ -11,6 +11,8 @@ const ONNX_DIR: &str = "models";
 const WEIGHTS_DIR: &str = "weights";
 
 fn main() {
+	println!("cargo::rerun-if-changed=models");
+
 	let out_dir = env::var("OUT_DIR").expect("OUT_DIR not defined");
 	let profile = env::var("PROFILE").expect("PROFILE not defined");
 
