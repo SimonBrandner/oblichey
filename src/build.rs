@@ -28,9 +28,13 @@ fn main() {
 	}
 }
 
+fn get_onnx_file_path(model_name: &str) -> String {
+	format!("{}/{}.onnx", ONNX_DIR, model_name)
+}
+
 fn import_onnx_model(model_name: &str) {
 	ModelGen::new()
-		.input(&(String::new() + ONNX_DIR + "/" + model_name + ".onnx"))
+		.input(&get_onnx_file_path(model_name))
 		.out_dir(MODELS_OUT_DIR)
 		.run_from_script();
 }
@@ -40,7 +44,7 @@ fn copy_weights_next_to_executable(
 	source_weights_dir: &Path,
 	new_weights_dir: &Path,
 ) {
-	let weights_file_name = String::new() + model_name + ".mpk";
+	let weights_file_name = format!("{}.mpk", model_name);
 	let source_path = source_weights_dir.join(weights_file_name.clone());
 	let destination_path = new_weights_dir.join(weights_file_name);
 
