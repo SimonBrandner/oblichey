@@ -32,6 +32,12 @@ where
 {
 }
 
+fn calculate_length<T: Vec2DNumber>(min: T, max: T) -> T {
+	let min_f32 = <f32 as NumCast>::from(min).unwrap_or(0.0);
+	let max_f32 = <f32 as NumCast>::from(max).unwrap_or(0.0);
+	<T as NumCast>::from((max_f32 - min_f32).abs()).unwrap_or(T::zero())
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2D<T: Vec2DNumber> {
 	pub x: T,
@@ -88,7 +94,7 @@ impl<T: Vec2DNumber + Neg<Output = T>> Neg for Vec2D<T> {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rectangle<T: Vec2DNumber> {
 	pub min: Vec2D<T>,
 	pub max: Vec2D<T>,
@@ -101,6 +107,18 @@ impl<T: Vec2DNumber> Rectangle<T> {
 
 	pub fn to_i32(&self) -> Rectangle<i32> {
 		Rectangle::new(self.min.to_i32(), self.max.to_i32())
+	}
+
+	pub fn width(&self) -> T {
+		calculate_length(self.min.x, self.max.x)
+	}
+
+	pub fn height(&self) -> T {
+		calculate_length(self.min.y, self.max.y)
+	}
+
+	pub fn size(&self) -> (T, T) {
+		(self.width(), self.height())
 	}
 
 	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> f32 {

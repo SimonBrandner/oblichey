@@ -7,7 +7,7 @@ mod processors;
 use camera::Frame;
 use clap::Parser;
 use core::panic;
-use processors::DetectedFace;
+use processors::FaceForGUI;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
@@ -39,7 +39,7 @@ fn main() {
 	}
 
 	let frame: Arc<Mutex<Option<Frame>>> = Arc::new(Mutex::new(None));
-	let detected_faces: Arc<Mutex<Vec<DetectedFace>>> = Arc::new(Mutex::new(Vec::new()));
+	let faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>> = Arc::new(Mutex::new(Vec::new()));
 	let finished: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
 
 	let frame_clone = frame.clone();
@@ -47,11 +47,11 @@ fn main() {
 	thread::spawn(move || camera::start(frame_clone, finished_clone));
 
 	if !args.no_gui {
-		let detected_faces_clone = detected_faces.clone();
+		let faces_for_gui_clone = faces_for_gui.clone();
 		let frame_clone = frame.clone();
 		let finished_clone = finished.clone();
-		thread::spawn(move || gui::start(frame_clone, detected_faces_clone, finished_clone));
+		thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
 	}
 
-	let _ = thread::spawn(move || processors::start(frame, detected_faces, finished)).join();
+	let _ = thread::spawn(move || processors::start(frame, faces_for_gui, finished)).join();
 }

@@ -1,9 +1,9 @@
-use super::{DetectedFace, Face};
+use super::{FaceForProcessing, FaceRecognitionData};
 use crate::{
 	camera::Frame,
 	geometry::{Rectangle, Vec2D},
 	models::{detector, recognizer},
-	processors::{Embedding, EmbeddingData},
+	processors::{EmbeddingData, FaceEmbedding, FaceRecognitionError},
 };
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use burn::tensor::{Tensor, TensorData};
@@ -19,6 +19,18 @@ const CONFIDENCE_THRESHOLD: f32 = 0.95;
 pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 /// The size of the image the recognizer model takes as input
 pub const RECOGNIZER_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 128, y: 128 };
+
+fn rectangle_large_enough_for_recognition(rectangle: &Rectangle<u32>) -> bool {
+	let (width, height) = rectangle.size();
+	if width < RECOGNIZER_INPUT_SIZE.x {
+		return false;
+	}
+	if height < RECOGNIZER_INPUT_SIZE.y {
+		return false;
+	}
+
+	true
+}
 
 fn get_weights_file(model_name: &str) -> String {
 	let path_to_executable = std::env::current_exe().expect("Could not get path to executable!");
@@ -58,7 +70,7 @@ impl FrameProcessor {
 		}
 	}
 
-	pub fn process_frame(&self, frame: &RgbImage) -> Vec<DetectedFace> {
+	pub fn process_frame(&self, frame: &RgbImage) -> Vec<FaceForProcessing> {
 		assert_eq!(
 			frame.width(),
 			DETECTOR_INPUT_SIZE.x,
@@ -77,26 +89,32 @@ impl FrameProcessor {
 		let mut detected_faces = Vec::new();
 		let mut frame = frame.clone();
 		for rectangle in face_rectangles {
-			let recognizer_input = self.normalize_recognizer_input(&mut frame, &rectangle);
-			let recognizer_output = self.recognizer.forward(recognizer_input);
-			let face = self.interpret_recognizer_output(&recognizer_output);
-
-			detected_faces.push(DetectedFace { rectangle, face })
+			detected_faces.push(FaceForProcessing {
+				rectangle: rectangle.clone(),
+				face_data: if rectangle_large_enough_for_recognition(&rectangle) {
+					let recognizer_input = self.normalize_recognizer_input(&mut frame, &rectangle);
+					let recognizer_output = self.recognizer.forward(recognizer_input);
+					let face = self.interpret_recognizer_output(&recognizer_output);
+					Ok(face)
+				} else {
+					Err(FaceRecognitionError::TooSmall)
+				},
+			})
 		}
 
 		detected_faces
 	}
 
-	fn interpret_recognizer_output(&self, output: &Tensor<Backend, 2>) -> Face {
+	fn interpret_recognizer_output(&self, output: &Tensor<Backend, 2>) -> FaceRecognitionData {
 		let data = output
 			.to_data()
 			.to_vec::<f32>()
 			.expect("Embedding has an unexpected shape!");
 		let embedding_data =
 			EmbeddingData::try_from(data).expect("Embedding has an unexpected shape!");
-		let embedding = Embedding::new(embedding_data);
+		let embedding = FaceEmbedding::new(embedding_data);
 
-		Face { embedding }
+		FaceRecognitionData { embedding }
 	}
 
 	fn interpret_detector_output(

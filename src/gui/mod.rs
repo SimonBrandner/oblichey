@@ -4,10 +4,10 @@ use crate::{
 	camera::{self, Frame},
 	geometry::{Rectangle, Vec2D, Vec2DNumber},
 	gui::poi::draw_poi_square,
-	processors::{frame_processor::DETECTOR_INPUT_SIZE, DetectedFace},
+	processors::{frame_processor::DETECTOR_INPUT_SIZE, FaceForGUI, FaceForGUIAnnotation},
 };
 use eframe::{
-	egui::{self, Color32, ColorImage, Pos2, Rect, Rounding, Vec2},
+	egui::{self, Align2, Color32, ColorImage, FontFamily, FontId, Pos2, Rect, Rounding, Vec2},
 	EventLoopBuilderHook, NativeOptions,
 };
 use num::NumCast;
@@ -20,6 +20,11 @@ use std::{
 	},
 };
 use winit::platform::unix::EventLoopBuilderExtUnix;
+
+const FACE_RECTANGLE_WHITE_COLOR: Color32 = Color32::from_rgb(255, 255, 255);
+const FACE_RECTANGLE_GREY_COLOR: Color32 = Color32::from_rgb(192, 192, 192);
+const FACE_RECTANGLE_YELLOW_COLOR: Color32 = Color32::from_rgb(255, 255, 0);
+const LABEL_SHIFT: Vec2 = Vec2::new(10.0, 0.0);
 
 trait ToVec2 {
 	fn to_pos2(&self) -> Pos2;
@@ -51,8 +56,6 @@ impl<T: Vec2DNumber> ToRect for Rectangle<T> {
 	}
 }
 
-const FACE_RECTANGLE_COLOR: Color32 = Color32::from_rgb(255, 255, 0);
-
 pub enum Error {
 	Camera(camera::Error),
 }
@@ -73,7 +76,7 @@ impl Display for Error {
 
 pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
-	detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
+	faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
 ) {
 	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
@@ -91,25 +94,25 @@ pub fn start(
 			)),
 			..NativeOptions::default()
 		},
-		Box::new(|_| Box::new(GUI::new(frame, detected_faces, finished))),
+		Box::new(|_| Box::new(GUI::new(frame, faces_for_gui, finished))),
 	);
 }
 
 struct GUI {
 	frame: Arc<Mutex<Option<Frame>>>,
-	detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
+	faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
 }
 
 impl GUI {
 	pub fn new(
 		frame: Arc<Mutex<Option<Frame>>>,
-		detected_faces: Arc<Mutex<Vec<DetectedFace>>>,
+		faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
 		finished: Arc<AtomicBool>,
 	) -> Self {
 		Self {
 			frame,
-			detected_faces,
+			faces_for_gui,
 			finished,
 		}
 	}
@@ -153,15 +156,15 @@ impl eframe::App for GUI {
 			"Image height does not match network requirements!"
 		);
 
-		let detected_faces_lock = match self.detected_faces.lock() {
+		let faces_for_gui_lock = match self.faces_for_gui.lock() {
 			Ok(l) => l,
 			Err(e) => {
 				self.finished.store(true, Ordering::SeqCst);
 				panic!("Failed to get detected faces lock: {e}");
 			}
 		};
-		let detected_faces = detected_faces_lock.clone();
-		drop(detected_faces_lock);
+		let faces_for_gui = faces_for_gui_lock.clone();
+		drop(faces_for_gui_lock);
 
 		egui::CentralPanel::default()
 			.frame(egui::Frame::none().inner_margin(0.0).outer_margin(0.0))
@@ -181,14 +184,33 @@ impl eframe::App for GUI {
 					&image_texture,
 					Vec2::new(DETECTOR_INPUT_SIZE.x as f32, DETECTOR_INPUT_SIZE.y as f32),
 				);
-				for face in detected_faces {
-					let rectangles = draw_poi_square(face.rectangle);
+				for face_for_gui in faces_for_gui {
+					let (text, color) = match face_for_gui.annotation {
+						FaceForGUIAnnotation::Name(n) => (n, FACE_RECTANGLE_YELLOW_COLOR),
+						FaceForGUIAnnotation::Warning(w) => (w, FACE_RECTANGLE_GREY_COLOR),
+						FaceForGUIAnnotation::ScanningState {
+							scanned_sample_count,
+							required_sample_count,
+						} => (
+							format!(
+								"Scanning: {}/{}",
+								scanned_sample_count, required_sample_count
+							),
+							FACE_RECTANGLE_WHITE_COLOR,
+						),
+					};
+					let (rectangles, top_right_position) = draw_poi_square(face_for_gui.rectangle);
+
+					ui.painter().text(
+						top_right_position.to_pos2() + LABEL_SHIFT,
+						Align2::LEFT_TOP,
+						text,
+						FontId::new(16.0, FontFamily::Monospace),
+						FACE_RECTANGLE_WHITE_COLOR,
+					);
 					for rectangle in rectangles {
-						ui.painter().rect_filled(
-							rectangle.to_rect(),
-							Rounding::default(),
-							FACE_RECTANGLE_COLOR,
-						);
+						ui.painter()
+							.rect_filled(rectangle.to_rect(), Rounding::default(), color);
 					}
 				}
 			});

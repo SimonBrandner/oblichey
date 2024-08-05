@@ -284,7 +284,7 @@ fn draw_side_rectangles(
 
 /// As a Person of Interest fan, I decided it would be fun to draw Person of Interest-like
 /// squares around the detected faces, so that is what this function does
-pub fn draw_poi_square(rectangle: Rectangle<u32>) -> Vec<Rectangle<i32>> {
+pub fn draw_poi_square(rectangle: Rectangle<u32>) -> (Vec<Rectangle<i32>>, Vec2D<i32>) {
 	let small_rectangles_offset = (CORNER_RECTANGLE_SIZE.y - SIDE_RECTANGLE_SIZE.y) / 2;
 	let (
 		square_size,
@@ -314,5 +314,5 @@ pub fn draw_poi_square(rectangle: Rectangle<u32>) -> Vec<Rectangle<i32>> {
 		&bottom_right_position,
 	));
 
-	rectangles
+	(rectangles, top_right_position)
 }
