@@ -25,9 +25,6 @@ enum Command {
 struct Args {
 	#[arg(value_enum)]
 	command: Command,
-
-	#[arg(short, long, default_value = "false")]
-	no_gui: bool,
 }
 
 fn main() {
@@ -46,12 +43,10 @@ fn main() {
 	let finished_clone = finished.clone();
 	thread::spawn(move || camera::start(frame_clone, finished_clone));
 
-	if !args.no_gui {
-		let faces_for_gui_clone = faces_for_gui.clone();
-		let frame_clone = frame.clone();
-		let finished_clone = finished.clone();
-		thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
-	}
+	let faces_for_gui_clone = faces_for_gui.clone();
+	let frame_clone = frame.clone();
+	let finished_clone = finished.clone();
+	thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
 
 	let _ = thread::spawn(move || processors::start(frame, faces_for_gui, finished)).join();
 }
