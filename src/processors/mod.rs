@@ -152,6 +152,10 @@ pub fn start(
 
 		let new_faces_for_processing = frame_processor.process_frame(&image);
 		let new_faces_for_gui = face_processor.process_detected_faces(new_faces_for_processing);
+		if face_processor.is_finished() {
+			finished.store(true, Ordering::SeqCst);
+			return;
+		}
 
 		let mut faces_for_gui_lock = match faces_for_gui.lock() {
 			Ok(l) => l,
@@ -162,10 +166,5 @@ pub fn start(
 		};
 		*faces_for_gui_lock = new_faces_for_gui.clone();
 		drop(faces_for_gui_lock);
-
-		if face_processor.is_finished() {
-			finished.store(true, Ordering::SeqCst);
-			return;
-		}
 	}
 }
