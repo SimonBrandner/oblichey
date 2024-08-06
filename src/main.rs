@@ -51,7 +51,7 @@ fn main() {
 				Err(e) => panic!("{}", e),
 			};
 			let result = auth_processor_lock.get_result();
-			println!("Scanning result: {:?}", result);
+			println!("Auth result: {:?}", result);
 		}
 		Command::Scan => {
 			let scan_processor = Arc::new(Mutex::new(ScanProcessor::new()));
