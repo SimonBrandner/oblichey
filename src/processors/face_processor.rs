@@ -6,10 +6,17 @@ use std::fmt::Debug;
 const SIMILARITY_THRESHOLD: f32 = 0.51;
 const SCAN_SAMPLE_COUNT: usize = 16;
 
+#[derive(Clone, Debug)]
+pub enum FaceProcessorOutput {
+	Finished,
+	State(Vec<FaceForGUI>),
+}
+
 pub trait FaceProcessor: Debug {
-	fn process_detected_faces(&mut self, detected_faces: Vec<FaceForProcessing>)
-		-> Vec<FaceForGUI>;
-	fn is_finished(&self) -> bool;
+	fn process_detected_faces(
+		&mut self,
+		detected_faces: Vec<FaceForProcessing>,
+	) -> FaceProcessorOutput;
 }
 
 #[derive(Debug, Clone)]
@@ -40,25 +47,30 @@ impl FaceProcessor for ScanProcessor {
 	fn process_detected_faces(
 		&mut self,
 		faces_for_processing: Vec<FaceForProcessing>,
-	) -> Vec<FaceForGUI> {
+	) -> FaceProcessorOutput {
 		// Handle edge-cases
+		if self.result.is_some() {
+			return FaceProcessorOutput::Finished;
+		}
 		if faces_for_processing.len() > 1 {
 			self.embedding_samples.clear();
-			return faces_for_processing
-				.into_iter()
-				.map(|f| FaceForGUI {
-					rectangle: f.rectangle,
-					annotation: super::FaceForGUIAnnotation::Warning(String::from(
-						"Too many faces for scanning",
-					)),
-				})
-				.collect();
+			return FaceProcessorOutput::State(
+				faces_for_processing
+					.into_iter()
+					.map(|f| FaceForGUI {
+						rectangle: f.rectangle,
+						annotation: super::FaceForGUIAnnotation::Warning(String::from(
+							"Too many faces for scanning",
+						)),
+					})
+					.collect(),
+			);
 		};
 		let face_for_processing = match faces_for_processing.get(0) {
 			Some(f) => f,
 			None => {
 				self.embedding_samples.clear();
-				return vec![];
+				return FaceProcessorOutput::State(vec![]);
 			}
 		};
 		let embedding = match face_for_processing.face_data {
@@ -66,10 +78,10 @@ impl FaceProcessor for ScanProcessor {
 			Err(e) => match e {
 				FaceRecognitionError::TooSmall => {
 					self.embedding_samples.clear();
-					return vec![FaceForGUI {
+					return FaceProcessorOutput::State(vec![FaceForGUI {
 						rectangle: face_for_processing.rectangle,
 						annotation: FaceForGUIAnnotation::Warning(String::from("Too small")),
-					}];
+					}]);
 				}
 			},
 		};
@@ -84,7 +96,7 @@ impl FaceProcessor for ScanProcessor {
 
 			if similarity < SIMILARITY_THRESHOLD {
 				self.embedding_samples.clear();
-				return vec![];
+				return FaceProcessorOutput::State(vec![]);
 			}
 		}
 		self.embedding_samples.push(embedding);
@@ -93,21 +105,18 @@ impl FaceProcessor for ScanProcessor {
 		if self.embedding_samples.len() > SCAN_SAMPLE_COUNT {
 			self.result = Some(ScanProcessorResult {
 				face_embedding: FaceEmbedding::average_embedding(&self.embedding_samples),
-			})
-		};
+			});
+			return FaceProcessorOutput::Finished;
+		}
 
 		// Return info to be display in the GUI
-		vec![FaceForGUI {
+		FaceProcessorOutput::State(vec![FaceForGUI {
 			rectangle: face_for_processing.rectangle,
 			annotation: super::FaceForGUIAnnotation::ScanningState {
 				scanned_sample_count: self.embedding_samples.len(),
 				required_sample_count: SCAN_SAMPLE_COUNT,
 			},
-		}]
-	}
-
-	fn is_finished(&self) -> bool {
-		self.result.is_some()
+		}])
 	}
 }
 
@@ -137,11 +146,7 @@ impl FaceProcessor for AuthProcessor {
 	fn process_detected_faces(
 		&mut self,
 		detected_faces: Vec<FaceForProcessing>,
-	) -> Vec<FaceForGUI> {
-		vec![]
-	}
-
-	fn is_finished(&self) -> bool {
-		self.finish_when_authed && self.result.is_some()
+	) -> FaceProcessorOutput {
+		FaceProcessorOutput::State(vec![])
 	}
 }

@@ -2,7 +2,7 @@ pub mod face_processor;
 pub mod frame_processor;
 
 use self::{
-	face_processor::{FaceProcessor, ScanProcessor},
+	face_processor::{FaceProcessor, FaceProcessorOutput},
 	frame_processor::FrameProcessor,
 };
 use crate::{camera::Frame, geometry::Rectangle};
@@ -128,9 +128,9 @@ pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
 	faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
+	face_processor: Arc<Mutex<dyn FaceProcessor>>,
 ) {
 	let frame_processor = FrameProcessor::new();
-	let mut face_processor = ScanProcessor::new();
 
 	loop {
 		if finished.load(Ordering::SeqCst) {
@@ -144,18 +144,29 @@ pub fn start(
 				panic!("Failed to get frame lock: {e}");
 			}
 		};
-		let image = match frame_lock.clone() {
+		let new_frame = match frame_lock.clone() {
 			Some(f) => f.clone(),
 			None => continue,
 		};
 		drop(frame_lock);
 
-		let new_faces_for_processing = frame_processor.process_frame(&image);
-		let new_faces_for_gui = face_processor.process_detected_faces(new_faces_for_processing);
-		if face_processor.is_finished() {
-			finished.store(true, Ordering::SeqCst);
-			return;
-		}
+		let faces_for_processing = frame_processor.process_frame(&new_frame);
+		let mut face_processor_lock = match face_processor.lock() {
+			Ok(l) => l,
+			Err(e) => {
+				finished.store(true, Ordering::SeqCst);
+				panic!("Failed to get face processor lock: {e}");
+			}
+		};
+		let new_faces_for_gui =
+			match face_processor_lock.process_detected_faces(faces_for_processing) {
+				FaceProcessorOutput::State(s) => s,
+				FaceProcessorOutput::Finished => {
+					finished.store(true, Ordering::SeqCst);
+					return;
+				}
+			};
+		drop(face_processor_lock);
 
 		let mut faces_for_gui_lock = match faces_for_gui.lock() {
 			Ok(l) => l,
