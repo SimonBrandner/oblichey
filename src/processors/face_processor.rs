@@ -117,11 +117,15 @@ pub struct AuthProcessorResult;
 #[derive(Debug)]
 pub struct AuthProcessor {
 	result: Option<AuthProcessorResult>,
+	finish_when_authed: bool,
 }
 
 impl AuthProcessor {
-	pub fn new() -> Self {
-		Self { result: None }
+	pub fn new(finish_when_authed: bool) -> Self {
+		Self {
+			result: None,
+			finish_when_authed,
+		}
 	}
 
 	pub fn get_result(&self) -> Option<AuthProcessorResult> {
@@ -138,6 +142,6 @@ impl FaceProcessor for AuthProcessor {
 	}
 
 	fn is_finished(&self) -> bool {
-		self.result.is_some()
+		self.finish_when_authed && self.result.is_some()
 	}
 }
