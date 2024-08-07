@@ -135,22 +135,20 @@ impl<T: Vec2DNumber> Rectangle<T> {
 			return 0.0;
 		}
 
-		let intersection_min_x = std::cmp::max(self.min.x.clone(), other.min.x.clone());
-		let intersection_min_y = std::cmp::max(self.min.y.clone(), other.min.y.clone());
-		let intersection_max_x = std::cmp::min(self.max.x.clone(), other.max.x.clone());
-		let intersection_max_y = std::cmp::min(self.max.y.clone(), other.max.y.clone());
+		let intersection_min_x = std::cmp::max(self.min.x, other.min.x);
+		let intersection_min_y = std::cmp::max(self.min.y, other.min.y);
+		let intersection_max_x = std::cmp::min(self.max.x, other.max.x);
+		let intersection_max_y = std::cmp::min(self.max.y, other.max.y);
 
 		let intersection_width = std::cmp::max(intersection_max_x - intersection_min_x, T::zero());
 		let intersection_height = std::cmp::max(intersection_max_y - intersection_min_y, T::zero());
 		let intersection_area = intersection_width * intersection_height;
 
-		let self_area =
-			(self.max.x.clone() - self.min.x.clone()) * (self.max.y.clone() - self.min.y.clone());
-		let other_area = (other.max.x.clone() - other.min.x.clone())
-			* (other.max.y.clone() - other.min.y.clone());
+		let self_area = (self.max.x - self.min.x) * (self.max.y - self.min.y);
+		let other_area = (other.max.x - other.min.x) * (other.max.y - other.min.y);
 
-		let union_area = <f32 as NumCast>::from(self_area + other_area - intersection_area.clone())
-			.unwrap_or(0.0);
+		let union_area =
+			<f32 as NumCast>::from(self_area + other_area - intersection_area).unwrap_or(0.0);
 
 		if union_area == 0.0 {
 			0.0

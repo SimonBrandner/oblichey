@@ -27,23 +27,23 @@ fn draw_corner_rectangles(
 	let mut rectangles = Vec::new();
 
 	rectangles.push(Rectangle::new(
-		top_left_position.clone(),
+		*top_left_position,
 		*top_left_position + CORNER_RECTANGLE_SIZE,
 	));
 	rectangles.push(Rectangle::new(
-		top_left_position.clone(),
+		*top_left_position,
 		*top_left_position + CORNER_RECTANGLE_SIZE.with_flipped_axes(),
 	));
 
 	rectangles.push(Rectangle::new(
-		top_right_position.clone(),
+		*top_right_position,
 		Vec2D::new(
 			top_right_position.x - CORNER_RECTANGLE_SIZE.x,
 			top_right_position.y + CORNER_RECTANGLE_SIZE.y,
 		),
 	));
 	rectangles.push(Rectangle::new(
-		top_right_position.clone(),
+		*top_right_position,
 		Vec2D::new(
 			top_right_position.x - CORNER_RECTANGLE_SIZE.y,
 			top_right_position.y + CORNER_RECTANGLE_SIZE.x,
@@ -51,14 +51,14 @@ fn draw_corner_rectangles(
 	));
 
 	rectangles.push(Rectangle::new(
-		bottom_left_position.clone(),
+		*bottom_left_position,
 		Vec2D::new(
 			bottom_left_position.x + CORNER_RECTANGLE_SIZE.x,
 			bottom_left_position.y - CORNER_RECTANGLE_SIZE.y,
 		),
 	));
 	rectangles.push(Rectangle::new(
-		bottom_left_position.clone(),
+		*bottom_left_position,
 		Vec2D::new(
 			bottom_left_position.x + CORNER_RECTANGLE_SIZE.y,
 			bottom_left_position.y - CORNER_RECTANGLE_SIZE.x,
@@ -66,11 +66,11 @@ fn draw_corner_rectangles(
 	));
 
 	rectangles.push(Rectangle::new(
-		bottom_right_position.clone(),
+		*bottom_right_position,
 		*bottom_right_position - CORNER_RECTANGLE_SIZE,
 	));
 	rectangles.push(Rectangle::new(
-		bottom_right_position.clone(),
+		*bottom_right_position,
 		*bottom_right_position - CORNER_RECTANGLE_SIZE.with_flipped_axes(),
 	));
 
@@ -131,7 +131,7 @@ fn draw_side_rectangles_segment(
 	small_rectangle_position: &Vec2D<i32>,
 	orientation: Orientation,
 ) -> Vec<Rectangle<i32>> {
-	let mut small_rectangle_position = small_rectangle_position.clone();
+	let mut small_rectangle_position = *small_rectangle_position;
 	let mut rectangles = Vec::new();
 	for _ in 0..*number_of_small_rectangles {
 		let mut small_rect = SIDE_RECTANGLE_SIZE;
@@ -143,8 +143,8 @@ fn draw_side_rectangles_segment(
 		}
 
 		rectangles.push(Rectangle::new(
-			small_rectangle_position.clone(),
-			small_rectangle_position.clone() + small_rect,
+			small_rectangle_position,
+			small_rectangle_position + small_rect,
 		));
 
 		if orientation == Orientation::Horizontal {

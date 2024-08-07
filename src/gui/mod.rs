@@ -33,8 +33,8 @@ trait ToVec2 {
 impl<T: Vec2DNumber> ToVec2 for Vec2D<T> {
 	fn to_pos2(&self) -> Pos2 {
 		Pos2 {
-			x: <f32 as NumCast>::from(self.x.clone()).unwrap_or(0.0),
-			y: <f32 as NumCast>::from(self.y.clone()).unwrap_or(0.0),
+			x: <f32 as NumCast>::from(self.x).unwrap_or(0.0),
+			y: <f32 as NumCast>::from(self.y).unwrap_or(0.0),
 		}
 	}
 }

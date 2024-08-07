@@ -107,7 +107,7 @@ impl FaceProcessor for ScanProcessor {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct AuthProcessorResult {
 	pub authenticated: bool,
 }
@@ -131,7 +131,7 @@ impl AuthProcessor {
 	}
 
 	pub fn get_result(&self) -> Option<AuthProcessorResult> {
-		self.result.clone()
+		self.result
 	}
 
 	fn process_face(&self, face_for_processing: &FaceForProcessing) -> FaceForGUI {

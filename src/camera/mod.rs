@@ -24,7 +24,7 @@ const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
 
 pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
-#[derive(Clone, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum SupportedPixelFormat {
 	YUYV,
 	GREY,
@@ -112,11 +112,11 @@ impl<'a> Camera<'a> {
 	}
 
 	pub fn get_pixel_format(&self) -> SupportedPixelFormat {
-		self.pixel_format.clone()
+		self.pixel_format
 	}
 
 	pub fn get_frame_size(&self) -> Vec2D<u32> {
-		self.frame_size.clone()
+		self.frame_size
 	}
 }
 

@@ -90,7 +90,7 @@ impl FrameProcessor {
 		let mut frame = frame.clone();
 		for rectangle in face_rectangles {
 			detected_faces.push(FaceForProcessing {
-				rectangle: rectangle.clone(),
+				rectangle,
 				face_data: if rectangle_large_enough_for_recognition(&rectangle) {
 					let recognizer_input = self.normalize_recognizer_input(&mut frame, &rectangle);
 					let recognizer_output = self.recognizer.forward(recognizer_input);
