@@ -3,7 +3,9 @@ mod geometry;
 mod gui;
 mod models;
 mod processors;
+mod store;
 
+use crate::store::{load_face_embeddings, remove_face_embedding};
 use camera::Frame;
 use clap::Parser;
 use core::panic;
@@ -12,19 +14,20 @@ use processors::FaceForGUI;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
+use store::save_face_embedding;
 
-#[derive(PartialEq, Eq, Debug, Clone, clap::ValueEnum)]
+#[derive(PartialEq, Eq, Debug, Clone, clap::Subcommand)]
 enum Command {
+	Scan { name: String },
+	Remove { name: String },
 	Auth,
-	Scan,
 	Test,
-	Remove,
 	List,
 }
 
 #[derive(clap::Parser, Debug)]
 struct Args {
-	#[arg(value_enum)]
+	#[command(subcommand)]
 	command: Command,
 }
 
@@ -33,35 +36,53 @@ fn main() {
 	let command = args.command;
 
 	match command {
-		Command::Remove => {
-			panic!("Not implemented!")
+		Command::Remove { name } => {
+			remove_face_embedding(&name);
 		}
 		Command::List => {
-			panic!("Not implemented!")
+			let face_embeddings = load_face_embeddings();
+			for (name, _) in face_embeddings {
+				println!("{}", name);
+			}
 		}
 		Command::Test => {
-			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(false)));
+			let face_embeddings = load_face_embeddings();
+			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, true)));
+
 			start_threads(auth_processor);
 		}
 		Command::Auth => {
-			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(true)));
+			let face_embeddings = load_face_embeddings();
+			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, false)));
+
 			start_threads(auth_processor.clone());
+
 			let auth_processor_lock = match auth_processor.lock() {
 				Ok(l) => l,
 				Err(e) => panic!("{}", e),
 			};
-			let result = auth_processor_lock.get_result();
-			println!("Auth result: {:?}", result);
+			let result = match auth_processor_lock.get_result() {
+				Some(r) => r,
+				None => unreachable!(),
+			};
+			if result.authenticated {
+				println!("Authenticated!");
+			} else {
+				println!("Authentication failed!");
+			}
 		}
-		Command::Scan => {
+		Command::Scan { name } => {
 			let scan_processor = Arc::new(Mutex::new(ScanProcessor::new()));
 			start_threads(scan_processor.clone());
 			let scan_processor_lock = match scan_processor.lock() {
 				Ok(l) => l,
 				Err(e) => panic!("{}", e),
 			};
-			let result = scan_processor_lock.get_result();
-			println!("Scanning result: {:?}", result);
+			let result = match scan_processor_lock.get_result() {
+				Some(r) => r,
+				None => panic!("Scanning ended with no result!"),
+			};
+			save_face_embedding(&name, &result.face_embedding);
 		}
 	}
 }

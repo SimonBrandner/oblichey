@@ -1,13 +1,12 @@
 pub mod face_processor;
 pub mod frame_processor;
 
-use self::{
-	face_processor::{FaceProcessor, FaceProcessorOutput},
-	frame_processor::FrameProcessor,
-};
+use self::{face_processor::FaceProcessor, frame_processor::FrameProcessor};
 use crate::{camera::Frame, geometry::Rectangle};
 use core::panic;
 use num::pow::Pow;
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::{
 	ops::{AddAssign, Div},
 	sync::{
@@ -26,8 +25,10 @@ pub enum FaceRecognitionError {
 
 type EmbeddingData = [f32; EMBEDDING_LENGTH];
 
-#[derive(Debug, Clone, Copy)]
+#[serde_as]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FaceEmbedding {
+	#[serde_as(as = "[_; EMBEDDING_LENGTH]")]
 	data: EmbeddingData,
 }
 
@@ -158,14 +159,11 @@ pub fn start(
 				panic!("Failed to get face processor lock: {e}");
 			}
 		};
-		let new_faces_for_gui =
-			match face_processor_lock.process_detected_faces(faces_for_processing) {
-				FaceProcessorOutput::State(s) => s,
-				FaceProcessorOutput::Finished => {
-					finished.store(true, Ordering::SeqCst);
-					return;
-				}
-			};
+		let new_faces_for_gui = face_processor_lock.process_faces(faces_for_processing);
+		if face_processor_lock.is_finished() {
+			finished.store(true, Ordering::SeqCst);
+			return;
+		}
 		drop(face_processor_lock);
 
 		let mut faces_for_gui_lock = match faces_for_gui.lock() {

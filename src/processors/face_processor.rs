@@ -1,27 +1,19 @@
-use crate::processors::FaceRecognitionError;
-
 use super::{FaceEmbedding, FaceForGUI, FaceForGUIAnnotation, FaceForProcessing};
-use std::fmt::Debug;
+use crate::processors::FaceRecognitionError;
+use std::{collections::HashMap, fmt::Debug, time::Instant};
 
+const AUTH_TIMEOUT: u64 = 15; // In seconds
 const SIMILARITY_THRESHOLD: f32 = 0.51;
 const SCAN_SAMPLE_COUNT: usize = 16;
 
-#[derive(Clone, Debug)]
-pub enum FaceProcessorOutput {
-	Finished,
-	State(Vec<FaceForGUI>),
-}
-
 pub trait FaceProcessor: Debug {
-	fn process_detected_faces(
-		&mut self,
-		detected_faces: Vec<FaceForProcessing>,
-	) -> FaceProcessorOutput;
+	fn process_faces(&mut self, detected_faces: Vec<FaceForProcessing>) -> Vec<FaceForGUI>;
+	fn is_finished(&self) -> bool;
 }
 
 #[derive(Debug, Clone)]
 pub struct ScanProcessorResult {
-	face_embedding: FaceEmbedding,
+	pub face_embedding: FaceEmbedding,
 }
 
 #[derive(Debug)]
@@ -44,33 +36,29 @@ impl ScanProcessor {
 }
 
 impl FaceProcessor for ScanProcessor {
-	fn process_detected_faces(
-		&mut self,
-		faces_for_processing: Vec<FaceForProcessing>,
-	) -> FaceProcessorOutput {
+	fn is_finished(&self) -> bool {
+		self.result.is_some()
+	}
+
+	fn process_faces(&mut self, faces_for_processing: Vec<FaceForProcessing>) -> Vec<FaceForGUI> {
 		// Handle edge-cases
-		if self.result.is_some() {
-			return FaceProcessorOutput::Finished;
-		}
 		if faces_for_processing.len() > 1 {
 			self.embedding_samples.clear();
-			return FaceProcessorOutput::State(
-				faces_for_processing
-					.into_iter()
-					.map(|f| FaceForGUI {
-						rectangle: f.rectangle,
-						annotation: super::FaceForGUIAnnotation::Warning(String::from(
-							"Too many faces for scanning",
-						)),
-					})
-					.collect(),
-			);
+			return faces_for_processing
+				.into_iter()
+				.map(|f| FaceForGUI {
+					rectangle: f.rectangle,
+					annotation: super::FaceForGUIAnnotation::Warning(String::from(
+						"Too many faces for scanning",
+					)),
+				})
+				.collect();
 		};
 		let face_for_processing = match faces_for_processing.get(0) {
 			Some(f) => f,
 			None => {
 				self.embedding_samples.clear();
-				return FaceProcessorOutput::State(vec![]);
+				return vec![];
 			}
 		};
 		let embedding = match face_for_processing.face_data {
@@ -78,10 +66,10 @@ impl FaceProcessor for ScanProcessor {
 			Err(e) => match e {
 				FaceRecognitionError::TooSmall => {
 					self.embedding_samples.clear();
-					return FaceProcessorOutput::State(vec![FaceForGUI {
+					return vec![FaceForGUI {
 						rectangle: face_for_processing.rectangle,
 						annotation: FaceForGUIAnnotation::Warning(String::from("Too small")),
-					}]);
+					}];
 				}
 			},
 		};
@@ -96,7 +84,7 @@ impl FaceProcessor for ScanProcessor {
 
 			if similarity < SIMILARITY_THRESHOLD {
 				self.embedding_samples.clear();
-				return FaceProcessorOutput::State(vec![]);
+				return vec![];
 			}
 		}
 		self.embedding_samples.push(embedding);
@@ -106,47 +94,121 @@ impl FaceProcessor for ScanProcessor {
 			self.result = Some(ScanProcessorResult {
 				face_embedding: FaceEmbedding::average_embedding(&self.embedding_samples),
 			});
-			return FaceProcessorOutput::Finished;
 		}
 
 		// Return info to be display in the GUI
-		FaceProcessorOutput::State(vec![FaceForGUI {
+		vec![FaceForGUI {
 			rectangle: face_for_processing.rectangle,
 			annotation: super::FaceForGUIAnnotation::ScanningState {
 				scanned_sample_count: self.embedding_samples.len(),
 				required_sample_count: SCAN_SAMPLE_COUNT,
 			},
-		}])
+		}]
 	}
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthProcessorResult;
+pub struct AuthProcessorResult {
+	pub authenticated: bool,
+}
 
 #[derive(Debug)]
 pub struct AuthProcessor {
 	result: Option<AuthProcessorResult>,
-	finish_when_authed: bool,
+	stored_face_embeddings: HashMap<String, FaceEmbedding>,
+	start_time: Instant,
+	testing_mode: bool,
 }
 
 impl AuthProcessor {
-	pub fn new(finish_when_authed: bool) -> Self {
+	pub fn new(face_embeddings: HashMap<String, FaceEmbedding>, testing_mode: bool) -> Self {
 		Self {
 			result: None,
-			finish_when_authed,
+			stored_face_embeddings: face_embeddings,
+			testing_mode,
+			start_time: Instant::now(),
 		}
 	}
 
 	pub fn get_result(&self) -> Option<AuthProcessorResult> {
 		self.result.clone()
 	}
+
+	fn process_face(&self, face_for_processing: &FaceForProcessing) -> FaceForGUI {
+		let face_data = match face_for_processing.face_data {
+			Ok(d) => d,
+			Err(e) => match e {
+				FaceRecognitionError::TooSmall => {
+					return FaceForGUI {
+						rectangle: face_for_processing.rectangle,
+						annotation: FaceForGUIAnnotation::Warning("Too small".to_owned()),
+					}
+				}
+			},
+		};
+
+		let mut best_match: Option<(String, f32)> = None;
+		for (stored_face_embedding_name, stored_face_embedding) in &self.stored_face_embeddings {
+			let similarity = face_data
+				.embedding
+				.cosine_similarity(&stored_face_embedding);
+			if similarity < SIMILARITY_THRESHOLD {
+				continue;
+			}
+			match best_match {
+				Some((_, best_match_similarity)) => {
+					if similarity > best_match_similarity {
+						best_match = Some((stored_face_embedding_name.clone(), similarity))
+					}
+				}
+				None => best_match = Some((stored_face_embedding_name.clone(), similarity)),
+			}
+		}
+
+		FaceForGUI {
+			rectangle: face_for_processing.rectangle,
+			annotation: match best_match {
+				Some((name, _)) => FaceForGUIAnnotation::Name(name),
+				None => FaceForGUIAnnotation::Warning("Not recognized".to_owned()),
+			},
+		}
+	}
+
+	fn have_timed_out(&self) -> bool {
+		if !self.testing_mode && self.start_time.elapsed().as_secs() > AUTH_TIMEOUT {
+			return true;
+		}
+
+		false
+	}
 }
 
 impl FaceProcessor for AuthProcessor {
-	fn process_detected_faces(
-		&mut self,
-		detected_faces: Vec<FaceForProcessing>,
-	) -> FaceProcessorOutput {
-		FaceProcessorOutput::State(vec![])
+	fn is_finished(&self) -> bool {
+		self.result.is_some()
+	}
+
+	fn process_faces(&mut self, faces_for_processing: Vec<FaceForProcessing>) -> Vec<FaceForGUI> {
+		if self.have_timed_out() {
+			self.result = Some(AuthProcessorResult {
+				authenticated: false,
+			})
+		}
+
+		let mut faces_for_gui = Vec::new();
+		for face_for_processing in faces_for_processing {
+			let face_for_gui = self.process_face(&face_for_processing);
+			if !self.testing_mode {
+				if let FaceForGUIAnnotation::Name(_) = face_for_gui.annotation {
+					self.result = Some(AuthProcessorResult {
+						authenticated: true,
+					})
+				}
+			}
+
+			faces_for_gui.push(face_for_gui);
+		}
+
+		faces_for_gui
 	}
 }
