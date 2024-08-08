@@ -11,7 +11,7 @@ use clap::Parser;
 use core::panic;
 use processors::face::FaceForGUI;
 use processors::face_processor::{AuthProcessor, FaceProcessor, ScanProcessor};
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
 use store::save_face_embedding;
@@ -97,17 +97,39 @@ fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>, gu
 
 	let frame_clone = frame.clone();
 	let finished_clone = finished.clone();
-	thread::spawn(move || camera::start(&frame_clone, &finished_clone));
+	let camera_thread = thread::spawn(move || camera::start(&frame_clone, &finished_clone));
 
-	if gui {
-		let faces_for_gui_clone = faces_for_gui.clone();
-		let frame_clone = frame.clone();
+	let faces_for_gui_clone = faces_for_gui.clone();
+	let finished_clone = finished.clone();
+	let frame_clone = frame.clone();
+	let processing_thread = thread::spawn(move || {
+		processors::start(
+			&frame_clone,
+			&faces_for_gui_clone,
+			&finished_clone,
+			&face_processor,
+		);
+	});
+
+	let gui_thread = gui.then(|| {
 		let finished_clone = finished.clone();
-		thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
-	}
+		thread::spawn(move || {
+			gui::start(frame, faces_for_gui, finished_clone);
+		})
+	});
 
-	let _ = thread::spawn(move || {
-		processors::start(&frame, &faces_for_gui, &finished, &face_processor);
-	})
-	.join();
+	loop {
+		let camera_finished = camera_thread.is_finished();
+		let processing_finished = processing_thread.is_finished();
+		let gui_finished = gui_thread
+			.as_ref()
+			.map_or(true, thread::JoinHandle::is_finished);
+
+		if camera_finished || processing_finished || (gui_finished && gui_thread.is_some()) {
+			finished.store(true, Ordering::SeqCst);
+		}
+		if camera_finished && processing_finished && gui_finished {
+			break;
+		}
+	}
 }

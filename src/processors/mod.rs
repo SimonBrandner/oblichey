@@ -25,10 +25,7 @@ pub fn start(
 
 		let frame_lock = match frame.lock() {
 			Ok(l) => l,
-			Err(e) => {
-				finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get frame lock: {e}");
-			}
+			Err(e) => panic!("Failed to get frame lock: {e}"),
 		};
 		let new_frame = match frame_lock.clone() {
 			Some(f) => f.clone(),
@@ -39,24 +36,17 @@ pub fn start(
 		let faces_for_processing = frame_processor.process_frame(&new_frame);
 		let mut face_processor_lock = match face_processor.lock() {
 			Ok(l) => l,
-			Err(e) => {
-				finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get face processor lock: {e}");
-			}
+			Err(e) => panic!("Failed to get face processor lock: {e}"),
 		};
 		let new_faces_for_gui = face_processor_lock.process_faces(faces_for_processing);
 		if face_processor_lock.is_finished() {
-			finished.store(true, Ordering::SeqCst);
 			return;
 		}
 		drop(face_processor_lock);
 
 		let mut faces_for_gui_lock = match faces_for_gui.lock() {
 			Ok(l) => l,
-			Err(e) => {
-				finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get detected faces lock: {e}");
-			}
+			Err(e) => panic!("Failed to get detected faces lock: {e}"),
 		};
 		faces_for_gui_lock.clone_from(&new_faces_for_gui);
 		drop(faces_for_gui_lock);

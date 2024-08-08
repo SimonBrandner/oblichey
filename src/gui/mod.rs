@@ -166,10 +166,6 @@ impl Gui {
 }
 
 impl eframe::App for Gui {
-	fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-		self.finished.store(true, Ordering::SeqCst);
-	}
-
 	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 		if self.finished.load(Ordering::SeqCst) {
 			frame.close();
@@ -178,10 +174,7 @@ impl eframe::App for Gui {
 
 		let frame_lock = match self.frame.lock() {
 			Ok(l) => l,
-			Err(e) => {
-				self.finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get frame lock: {e}");
-			}
+			Err(e) => panic!("Failed to get frame lock: {e}"),
 		};
 		let Some(image) = frame_lock.clone() else {
 			ctx.request_repaint();
@@ -202,10 +195,7 @@ impl eframe::App for Gui {
 
 		let faces_for_gui_lock = match self.faces.lock() {
 			Ok(l) => l,
-			Err(e) => {
-				self.finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get detected faces lock: {e}");
-			}
+			Err(e) => panic!("Failed to get detected faces lock: {e}"),
 		};
 		let faces_for_gui = faces_for_gui_lock.clone();
 		drop(faces_for_gui_lock);

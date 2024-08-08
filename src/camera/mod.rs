@@ -16,7 +16,7 @@ use v4l::video::Capture;
 use v4l::{Device, FourCC};
 
 // TODO: Make this user configurable
-const CAMERA_PATH: &str = "/dev/video2";
+const CAMERA_PATH: &str = "/dev/video0";
 /// Some (at least mine) IR cameras occasionally produce very dark frames which we ignore
 const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
 
@@ -118,10 +118,7 @@ impl<'a> Camera<'a> {
 pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 	let mut camera = match Camera::new() {
 		Ok(c) => c,
-		Err(e) => {
-			finished.store(true, Ordering::SeqCst);
-			panic!("Failed construct camera: {e}")
-		}
+		Err(e) => panic!("Failed construct camera: {e}"),
 	};
 	let pixel_format = camera.get_pixel_format();
 	let frame_size = camera.get_frame_size();
@@ -134,10 +131,7 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 
 		let new_frame = match camera.get_frame() {
 			Ok(f) => f,
-			Err(e) => {
-				finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get frame: {e}");
-			}
+			Err(e) => panic!("Failed to get frame: {e}"),
 		};
 
 		let rgb_frame = match pixel_format {
@@ -160,10 +154,7 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 
 		let mut frame_lock = match frame.lock() {
 			Ok(l) => l,
-			Err(e) => {
-				finished.store(true, Ordering::SeqCst);
-				panic!("Failed to get frame lock: {e}");
-			}
+			Err(e) => panic!("Failed to get frame lock: {e}"),
 		};
 		*frame_lock = Some(reshaped_frame);
 		drop(frame_lock);
