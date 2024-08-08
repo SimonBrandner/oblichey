@@ -18,11 +18,14 @@ pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 pub const RECOGNIZER_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 128, y: 128 };
 
 fn rectangle_large_enough_for_recognition(rectangle: &Rectangle<u32>) -> bool {
-	let (width, height) = rectangle.size();
-	if width < RECOGNIZER_INPUT_SIZE.x {
+	let size = rectangle
+		.size()
+		.expect("Failed to calculate size of Rectangle!");
+
+	if size.x < RECOGNIZER_INPUT_SIZE.x {
 		return false;
 	}
-	if height < RECOGNIZER_INPUT_SIZE.y {
+	if size.y < RECOGNIZER_INPUT_SIZE.y {
 		return false;
 	}
 
@@ -155,7 +158,9 @@ impl FrameProcessor {
 		while i < face_rectangles.len() {
 			let mut j = i + 1;
 			while j < face_rectangles.len() {
-				if face_rectangles[i].intersection_over_union(&face_rectangles[j])
+				if face_rectangles[i]
+					.intersection_over_union(&face_rectangles[j])
+					.expect("Failed to calculate intersection over union")
 					> INTERSECTION_OVER_UNION_THRESHOLD
 				{
 					face_rectangles.remove(j);

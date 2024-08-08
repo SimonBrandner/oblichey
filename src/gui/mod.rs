@@ -147,15 +147,23 @@ impl GUI {
 		let (rectangles, top_right_position) = draw_poi_square(face_for_gui.rectangle);
 
 		ui.painter().text(
-			top_right_position.to_pos2() + LABEL_SHIFT,
+			top_right_position
+				.to_pos2()
+				.expect("Failed to convert Vec2D to Pos2!")
+				+ LABEL_SHIFT,
 			Align2::LEFT_TOP,
 			text,
 			FontId::new(16.0, FontFamily::Monospace),
 			FACE_RECTANGLE_WHITE_COLOR,
 		);
 		for rectangle in rectangles {
-			ui.painter()
-				.rect_filled(rectangle.to_rect(), Rounding::default(), color);
+			ui.painter().rect_filled(
+				rectangle
+					.to_rect()
+					.expect("Failed to convert Rectangle to Rect!"),
+				Rounding::default(),
+				color,
+			);
 		}
 	}
 }

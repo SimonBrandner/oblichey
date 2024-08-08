@@ -292,7 +292,11 @@ pub fn draw_poi_square(rectangle: Rectangle<u32>) -> (Vec<Rectangle<i32>>, Vec2D
 		top_right_position,
 		bottom_right_position,
 		bottom_left_position,
-	) = calculate_square_properties(rectangle.to_i32());
+	) = calculate_square_properties(
+		rectangle
+			.to_i32()
+			.expect("Failed to convert Rectangle to i32!"),
+	);
 
 	let mut rectangles = Vec::new();
 	rectangles.extend(draw_corner_rectangles(

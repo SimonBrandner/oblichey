@@ -32,10 +32,10 @@ where
 {
 }
 
-fn calculate_length<T: Vec2DNumber>(min: T, max: T) -> T {
-	let min_f32 = <f32 as NumCast>::from(min).unwrap_or(0.0);
-	let max_f32 = <f32 as NumCast>::from(max).unwrap_or(0.0);
-	<T as NumCast>::from((max_f32 - min_f32).abs()).unwrap_or(T::zero())
+fn calculate_length<T: Vec2DNumber>(min: T, max: T) -> Option<T> {
+	let min_f32 = <f32 as NumCast>::from(min)?;
+	let max_f32 = <f32 as NumCast>::from(max)?;
+	Some(<T as NumCast>::from((max_f32 - min_f32).abs())?)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -49,11 +49,11 @@ impl<T: Vec2DNumber> Vec2D<T> {
 		Self { x, y }
 	}
 
-	pub fn to_i32(&self) -> Vec2D<i32> {
-		Vec2D::new(
-			<i32 as NumCast>::from(self.x).unwrap_or(0),
-			<i32 as NumCast>::from(self.y).unwrap_or(0),
-		)
+	pub fn to_i32(&self) -> Option<Vec2D<i32>> {
+		Some(Vec2D::new(
+			<i32 as NumCast>::from(self.x)?,
+			<i32 as NumCast>::from(self.y)?,
+		))
 	}
 
 	pub fn with_flipped_axes(&self) -> Self {
@@ -105,34 +105,34 @@ impl<T: Vec2DNumber> Rectangle<T> {
 		Self { min, max }
 	}
 
-	pub fn to_i32(&self) -> Rectangle<i32> {
-		Rectangle::new(self.min.to_i32(), self.max.to_i32())
+	pub fn to_i32(&self) -> Option<Rectangle<i32>> {
+		Some(Rectangle::new(self.min.to_i32()?, self.max.to_i32()?))
 	}
 
-	pub fn width(&self) -> T {
-		calculate_length(self.min.x, self.max.x)
+	pub fn width(&self) -> Option<T> {
+		Some(calculate_length(self.min.x, self.max.x)?)
 	}
 
-	pub fn height(&self) -> T {
-		calculate_length(self.min.y, self.max.y)
+	pub fn height(&self) -> Option<T> {
+		Some(calculate_length(self.min.y, self.max.y)?)
 	}
 
-	pub fn size(&self) -> (T, T) {
-		(self.width(), self.height())
+	pub fn size(&self) -> Option<Vec2D<T>> {
+		Some(Vec2D::new(self.width()?, self.height()?))
 	}
 
-	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> f32 {
+	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> Option<f32> {
 		if self.min.x > other.max.x {
-			return 0.0;
+			return Some(0.0);
 		}
 		if self.min.y > other.max.y {
-			return 0.0;
+			return Some(0.0);
 		}
 		if other.min.x > self.max.x {
-			return 0.0;
+			return Some(0.0);
 		}
 		if other.min.y > self.max.y {
-			return 0.0;
+			return Some(0.0);
 		}
 
 		let intersection_min_x = std::cmp::max(self.min.x, other.min.x);
@@ -147,13 +147,11 @@ impl<T: Vec2DNumber> Rectangle<T> {
 		let self_area = (self.max.x - self.min.x) * (self.max.y - self.min.y);
 		let other_area = (other.max.x - other.min.x) * (other.max.y - other.min.y);
 
-		let union_area =
-			<f32 as NumCast>::from(self_area + other_area - intersection_area).unwrap_or(0.0);
-
+		let union_area = <f32 as NumCast>::from(self_area + other_area - intersection_area)?;
 		if union_area == 0.0 {
-			0.0
-		} else {
-			<f32 as NumCast>::from(intersection_area).unwrap_or(0.0) / union_area
+			return None;
 		}
+
+		Some(<f32 as NumCast>::from(intersection_area)? / union_area)
 	}
 }
