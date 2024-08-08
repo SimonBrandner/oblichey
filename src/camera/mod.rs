@@ -1,8 +1,6 @@
 mod utils;
 
 use crate::geometry::Vec2D;
-use crate::processors::frame_processor::DETECTOR_INPUT_SIZE;
-use image::imageops::{crop, resize, FilterType};
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -10,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::{io, usize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use utils::{brightness, convert_grey_to_rgb, convert_yuyv_to_rgb};
+use utils::{brightness, convert_grey_to_rgb, convert_yuyv_to_rgb, reshape_frame};
 use v4l::buffer::Type;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
@@ -137,7 +135,6 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 			return;
 		}
 
-		// Get frame from the webcamera
 		let new_frame = match camera.get_frame() {
 			Ok(f) => f,
 			Err(e) => {
@@ -146,64 +143,24 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 			}
 		};
 
-		// Convert the frame to RGB
 		let rgb_frame = match pixel_format {
-			SupportedPixelFormat::YUYV => {
-				convert_yuyv_to_rgb(&new_frame, frame_size.x as u32, frame_size.y as u32)
-			}
+			SupportedPixelFormat::YUYV => convert_yuyv_to_rgb(&new_frame, &frame_size),
 			SupportedPixelFormat::GREY => {
 				// We need to ignore very dark frames in some way. It's difficult to pick a single
 				// threshold for "too dark", so we instead measure the brightness decrease
-				let brightness = brightness(&new_frame, frame_size.x as u32, frame_size.y as u32);
+				let brightness = brightness(&new_frame, &frame_size);
 				let brightness_decrease = last_brightness - brightness;
 				last_brightness = brightness;
 				if brightness_decrease > MAX_BRIGHTNESS_DECREASE {
 					continue;
 				}
 
-				convert_grey_to_rgb(&new_frame, frame_size.x as u32, frame_size.y as u32)
+				convert_grey_to_rgb(&new_frame, &frame_size)
 			}
 		};
 
-		// Calculate how to resize and crop
-		let original_aspect_ratio = frame_size.x as f32 / frame_size.y as f32;
-		let model_aspect_ratio = DETECTOR_INPUT_SIZE.x as f32 / DETECTOR_INPUT_SIZE.y as f32;
-		let (new_size, new_offset) = if original_aspect_ratio > model_aspect_ratio {
-			let size = Vec2D::new(
-				((DETECTOR_INPUT_SIZE.y as f32 / frame_size.y as f32) * frame_size.x as f32) as u32,
-				DETECTOR_INPUT_SIZE.y,
-			);
-			let offset = Vec2D::new((size.x - DETECTOR_INPUT_SIZE.x) / 2, 0);
+		let reshaped_frame = reshape_frame(rgb_frame, &frame_size);
 
-			(size, offset)
-		} else {
-			let size = Vec2D::new(
-				DETECTOR_INPUT_SIZE.x,
-				((DETECTOR_INPUT_SIZE.x as f32 / frame_size.x as f32) * frame_size.y as f32) as u32,
-			);
-			let offset = Vec2D::new(0, (size.y - DETECTOR_INPUT_SIZE.y) / 2);
-
-			(size, offset)
-		};
-
-		// Resize
-		let mut resized = resize(
-			&rgb_frame,
-			new_size.x as u32,
-			new_size.y as u32,
-			FilterType::CatmullRom,
-		);
-
-		// Crop
-		let cropped = crop(
-			&mut resized,
-			new_offset.x as u32,
-			new_offset.y as u32,
-			DETECTOR_INPUT_SIZE.x as u32,
-			DETECTOR_INPUT_SIZE.y as u32,
-		);
-
-		// Write the frame into a shared buffer
 		let mut frame_lock = match frame.lock() {
 			Ok(l) => l,
 			Err(e) => {
@@ -211,7 +168,7 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 				panic!("Failed to get frame lock: {e}");
 			}
 		};
-		*frame_lock = Some(cropped.to_image());
+		*frame_lock = Some(reshaped_frame);
 		drop(frame_lock);
 	}
 }

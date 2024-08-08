@@ -1,18 +1,21 @@
-use crate::camera::Frame;
-use image::ImageBuffer;
+use crate::{camera::Frame, geometry::Vec2D, processors::frame_processor::DETECTOR_INPUT_SIZE};
+use image::{
+	imageops::{crop, resize, FilterType},
+	ImageBuffer,
+};
 use rayon::prelude::*;
 
-pub fn brightness(grey_data: &[u8], width: u32, height: u32) -> f32 {
+pub fn brightness(grey_data: &[u8], size: &Vec2D<u32>) -> f32 {
 	let mut sum = 0.0;
 	for pixel in grey_data {
 		sum += *pixel as f32;
 	}
 
-	sum / (width * height) as f32
+	sum / (size.x * size.y) as f32
 }
 
-pub fn convert_grey_to_rgb(grey_data: &[u8], width: u32, height: u32) -> Frame {
-	let mut rgb_data = vec![0; (width * height * 3) as usize];
+pub fn convert_grey_to_rgb(grey_data: &[u8], size: &Vec2D<u32>) -> Frame {
+	let mut rgb_data = vec![0; (size.x * size.y * 3) as usize];
 
 	rgb_data
 		.par_chunks_mut(3)
@@ -24,12 +27,12 @@ pub fn convert_grey_to_rgb(grey_data: &[u8], width: u32, height: u32) -> Frame {
 			chunk[2] = grey_value;
 		});
 
-	ImageBuffer::from_vec(width, height, rgb_data)
+	ImageBuffer::from_vec(size.x, size.y, rgb_data)
 		.expect("Something went awry during image conversion")
 }
 
-pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> Frame {
-	let mut rgb_data = vec![0; (width * height * 3) as usize];
+pub fn convert_yuyv_to_rgb(yuyv: &[u8], size: &Vec2D<u32>) -> Frame {
+	let mut rgb_data = vec![0; (size.x * size.y * 3) as usize];
 
 	rgb_data
 		.par_chunks_exact_mut(6)
@@ -48,7 +51,7 @@ pub fn convert_yuyv_to_rgb(yuyv: &[u8], width: u32, height: u32) -> Frame {
 			chunk[3..6].copy_from_slice(&[r1, g1, b1]);
 		});
 
-	ImageBuffer::from_vec(width, height, rgb_data)
+	ImageBuffer::from_vec(size.x, size.y, rgb_data)
 		.expect("Something went awry during image conversion")
 }
 
@@ -66,4 +69,43 @@ fn convert_pixel_yuyv_to_rgb(y: i32, u: i32, v: i32) -> (u8, u8, u8) {
 		g.clamp(0, 255) as u8,
 		b.clamp(0, 255) as u8,
 	)
+}
+
+pub fn reshape_frame(frame: Frame, frame_size: &Vec2D<u32>) -> Frame {
+	let original_aspect_ratio = frame_size.x as f32 / frame_size.y as f32;
+	let model_aspect_ratio = DETECTOR_INPUT_SIZE.x as f32 / DETECTOR_INPUT_SIZE.y as f32;
+	let (new_size, new_offset) = if original_aspect_ratio > model_aspect_ratio {
+		let size = Vec2D::new(
+			((DETECTOR_INPUT_SIZE.y as f32 / frame_size.y as f32) * frame_size.x as f32) as u32,
+			DETECTOR_INPUT_SIZE.y,
+		);
+		let offset = Vec2D::new((size.x - DETECTOR_INPUT_SIZE.x) / 2, 0);
+
+		(size, offset)
+	} else {
+		let size = Vec2D::new(
+			DETECTOR_INPUT_SIZE.x,
+			((DETECTOR_INPUT_SIZE.x as f32 / frame_size.x as f32) * frame_size.y as f32) as u32,
+		);
+		let offset = Vec2D::new(0, (size.y - DETECTOR_INPUT_SIZE.y) / 2);
+
+		(size, offset)
+	};
+
+	let mut resized = resize(
+		&frame,
+		new_size.x as u32,
+		new_size.y as u32,
+		FilterType::CatmullRom,
+	);
+
+	let cropped = crop(
+		&mut resized,
+		new_offset.x as u32,
+		new_offset.y as u32,
+		DETECTOR_INPUT_SIZE.x as u32,
+		DETECTOR_INPUT_SIZE.y as u32,
+	);
+
+	cropped.to_image()
 }
