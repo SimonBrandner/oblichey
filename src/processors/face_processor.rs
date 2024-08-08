@@ -1,5 +1,8 @@
-use super::{FaceEmbedding, FaceForGUI, FaceForGUIAnnotation, FaceForProcessing};
-use crate::processors::FaceRecognitionError;
+use super::{
+	face::{FaceEmbedding, FaceForGUIAnnotationWarning, FaceForProcessing},
+	FaceForGUI,
+};
+use crate::processors::face::{FaceForGUIAnnotation, FaceRecognitionError};
 use std::{collections::HashMap, fmt::Debug, time::Instant};
 
 const AUTH_TIMEOUT: u64 = 15; // In seconds
@@ -48,9 +51,9 @@ impl FaceProcessor for ScanProcessor {
 				.into_iter()
 				.map(|f| FaceForGUI {
 					rectangle: f.rectangle,
-					annotation: super::FaceForGUIAnnotation::Warning(String::from(
-						"Too many faces for scanning",
-					)),
+					annotation: FaceForGUIAnnotation::Warning(
+						FaceForGUIAnnotationWarning::TooSmall,
+					),
 				})
 				.collect();
 		};
@@ -68,7 +71,9 @@ impl FaceProcessor for ScanProcessor {
 					self.embedding_samples.clear();
 					return vec![FaceForGUI {
 						rectangle: face_for_processing.rectangle,
-						annotation: FaceForGUIAnnotation::Warning(String::from("Too small")),
+						annotation: FaceForGUIAnnotation::Warning(
+							FaceForGUIAnnotationWarning::TooSmall,
+						),
 					}];
 				}
 			},
@@ -96,10 +101,10 @@ impl FaceProcessor for ScanProcessor {
 			});
 		}
 
-		// Return info to be display in the GUI
+		// Return info to be displayed in the GUI
 		vec![FaceForGUI {
 			rectangle: face_for_processing.rectangle,
-			annotation: super::FaceForGUIAnnotation::ScanningState {
+			annotation: FaceForGUIAnnotation::ScanningState {
 				scanned_sample_count: self.embedding_samples.len(),
 				required_sample_count: SCAN_SAMPLE_COUNT,
 			},
@@ -141,7 +146,9 @@ impl AuthProcessor {
 				FaceRecognitionError::TooSmall => {
 					return FaceForGUI {
 						rectangle: face_for_processing.rectangle,
-						annotation: FaceForGUIAnnotation::Warning("Too small".to_owned()),
+						annotation: FaceForGUIAnnotation::Warning(
+							FaceForGUIAnnotationWarning::TooSmall,
+						),
 					}
 				}
 			},
@@ -169,7 +176,7 @@ impl AuthProcessor {
 			rectangle: face_for_processing.rectangle,
 			annotation: match best_match {
 				Some((name, _)) => FaceForGUIAnnotation::Name(name),
-				None => FaceForGUIAnnotation::Warning("Not recognized".to_owned()),
+				None => FaceForGUIAnnotation::Warning(FaceForGUIAnnotationWarning::NotRecognized),
 			},
 		}
 	}

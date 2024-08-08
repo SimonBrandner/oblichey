@@ -1,9 +1,9 @@
-use super::{FaceForProcessing, FaceRecognitionData};
+use super::face::{FaceEmbedding, FaceEmbeddingData, FaceForProcessing, FaceRecognitionData};
 use crate::{
 	camera::Frame,
 	geometry::{Rectangle, Vec2D},
 	models::{detector, recognizer},
-	processors::{EmbeddingData, FaceEmbedding, FaceRecognitionError},
+	processors::face::FaceRecognitionError,
 };
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use burn::tensor::{Tensor, TensorData};
@@ -108,7 +108,7 @@ impl FrameProcessor {
 			.to_vec::<f32>()
 			.expect("Embedding has an unexpected shape!");
 		let embedding_data =
-			EmbeddingData::try_from(data).expect("Embedding has an unexpected shape!");
+			FaceEmbeddingData::try_from(data).expect("Embedding has an unexpected shape!");
 		let embedding = FaceEmbedding::new(embedding_data);
 
 		FaceRecognitionData { embedding }

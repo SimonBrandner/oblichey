@@ -7,7 +7,10 @@ use crate::{
 		geometry::{ToPos2, ToRect},
 		poi::draw_poi_square,
 	},
-	processors::{frame_processor::DETECTOR_INPUT_SIZE, FaceForGUI, FaceForGUIAnnotation},
+	processors::{
+		face::{FaceForGUI, FaceForGUIAnnotation, FaceForGUIAnnotationWarning},
+		frame_processor::DETECTOR_INPUT_SIZE,
+	},
 };
 use eframe::{
 	egui::{self, Align2, Color32, ColorImage, FontFamily, FontId, Rounding, Ui, Vec2},
@@ -122,7 +125,14 @@ impl GUI {
 	fn draw_face(&self, ui: &mut Ui, face_for_gui: FaceForGUI) {
 		let (text, color) = match face_for_gui.annotation {
 			FaceForGUIAnnotation::Name(n) => (n, FACE_RECTANGLE_YELLOW_COLOR),
-			FaceForGUIAnnotation::Warning(w) => (w, FACE_RECTANGLE_GREY_COLOR),
+			FaceForGUIAnnotation::Warning(w) => match w {
+				FaceForGUIAnnotationWarning::TooSmall => {
+					("Too small".to_owned(), FACE_RECTANGLE_GREY_COLOR)
+				}
+				FaceForGUIAnnotationWarning::NotRecognized => {
+					("Not recognized".to_owned(), FACE_RECTANGLE_GREY_COLOR)
+				}
+			},
 			FaceForGUIAnnotation::ScanningState {
 				scanned_sample_count,
 				required_sample_count,

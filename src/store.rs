@@ -1,4 +1,4 @@
-use crate::processors::FaceEmbedding;
+use crate::processors::face::FaceEmbedding;
 use bincode::{deserialize, serialize};
 use core::panic;
 use std::{

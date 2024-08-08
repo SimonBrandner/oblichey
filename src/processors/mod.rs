@@ -1,129 +1,14 @@
+pub mod face;
 pub mod face_processor;
 pub mod frame_processor;
 
-use self::{face_processor::FaceProcessor, frame_processor::FrameProcessor};
-use crate::{camera::Frame, geometry::Rectangle};
+use self::{face::FaceForGUI, face_processor::FaceProcessor, frame_processor::FrameProcessor};
+use crate::camera::Frame;
 use core::panic;
-use num::pow::Pow;
-use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use std::{
-	ops::{AddAssign, Div},
-	sync::{
-		atomic::{AtomicBool, Ordering},
-		Arc, Mutex,
-	},
+use std::sync::{
+	atomic::{AtomicBool, Ordering},
+	Arc, Mutex,
 };
-
-const EMBEDDING_LENGTH: usize = 512;
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum FaceRecognitionError {
-	/// The detected face was too small for running the recognition model on it
-	TooSmall,
-}
-
-type EmbeddingData = [f32; EMBEDDING_LENGTH];
-
-#[serde_as]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct FaceEmbedding {
-	#[serde_as(as = "[_; EMBEDDING_LENGTH]")]
-	data: EmbeddingData,
-}
-
-impl Default for FaceEmbedding {
-	fn default() -> Self {
-		let data: EmbeddingData = [0.0; EMBEDDING_LENGTH];
-		Self { data }
-	}
-}
-
-impl AddAssign for FaceEmbedding {
-	fn add_assign(&mut self, rhs: Self) {
-		for index in 0..EMBEDDING_LENGTH {
-			self.data[index] += rhs.data[index];
-		}
-	}
-}
-
-impl Div<f32> for FaceEmbedding {
-	type Output = Self;
-
-	fn div(self, rhs: f32) -> Self::Output {
-		let mut out = FaceEmbedding::default();
-		for index in 0..EMBEDDING_LENGTH {
-			out.data[index] = self.data[index] / rhs;
-		}
-
-		out
-	}
-}
-
-impl FaceEmbedding {
-	pub fn new(data: EmbeddingData) -> Self {
-		Self { data }
-	}
-
-	pub fn magnitude(&self) -> f32 {
-		let mut sum: f32 = 0.0;
-		for element in self.data {
-			sum += element.pow(2);
-		}
-
-		sum.sqrt()
-	}
-
-	pub fn dot_product(&self, other: &Self) -> f32 {
-		let mut dot_product = 0.0;
-		for index in 0..EMBEDDING_LENGTH {
-			dot_product += self.data[index] * other.data[index];
-		}
-
-		dot_product
-	}
-
-	pub fn cosine_similarity(&self, other: &Self) -> f32 {
-		self.dot_product(other) / (self.magnitude() * other.magnitude())
-	}
-
-	fn average_embedding(embeddings: &[FaceEmbedding]) -> FaceEmbedding {
-		let mut sum_embedding = FaceEmbedding::default();
-
-		for embedding in embeddings {
-			sum_embedding += *embedding;
-		}
-
-		sum_embedding / embeddings.len() as f32
-	}
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct FaceRecognitionData {
-	embedding: FaceEmbedding,
-}
-
-#[derive(Debug, Clone)]
-pub struct FaceForProcessing {
-	pub rectangle: Rectangle<u32>,
-	pub face_data: Result<FaceRecognitionData, FaceRecognitionError>,
-}
-
-#[derive(Clone, Debug)]
-pub enum FaceForGUIAnnotation {
-	Name(String),
-	Warning(String),
-	ScanningState {
-		scanned_sample_count: usize,
-		required_sample_count: usize,
-	},
-}
-
-#[derive(Debug, Clone)]
-pub struct FaceForGUI {
-	pub rectangle: Rectangle<u32>,
-	pub annotation: FaceForGUIAnnotation,
-}
 
 pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
