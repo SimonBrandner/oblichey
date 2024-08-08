@@ -49,13 +49,13 @@ fn main() {
 			let face_embeddings = load_face_embeddings();
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, true)));
 
-			start_threads(auth_processor);
+			start_threads(auth_processor, true);
 		}
 		Command::Auth => {
 			let face_embeddings = load_face_embeddings();
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, false)));
 
-			start_threads(auth_processor.clone());
+			start_threads(auth_processor.clone(), false);
 
 			let auth_processor_lock = match auth_processor.lock() {
 				Ok(l) => l,
@@ -73,7 +73,7 @@ fn main() {
 		}
 		Command::Scan { name } => {
 			let scan_processor = Arc::new(Mutex::new(ScanProcessor::new()));
-			start_threads(scan_processor.clone());
+			start_threads(scan_processor.clone(), true);
 			let scan_processor_lock = match scan_processor.lock() {
 				Ok(l) => l,
 				Err(e) => panic!("{}", e),
@@ -89,7 +89,7 @@ fn main() {
 
 /// This starts multiple threads for: reading from camera, processing frames and running the models
 /// on them and the GUI
-fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>) {
+fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>, gui: bool) {
 	let frame: Arc<Mutex<Option<Frame>>> = Arc::new(Mutex::new(None));
 	let faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>> = Arc::new(Mutex::new(Vec::new()));
 	let finished: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
@@ -98,10 +98,12 @@ fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>) {
 	let finished_clone = finished.clone();
 	thread::spawn(move || camera::start(frame_clone, finished_clone));
 
-	let faces_for_gui_clone = faces_for_gui.clone();
-	let frame_clone = frame.clone();
-	let finished_clone = finished.clone();
-	thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
+	if gui {
+		let faces_for_gui_clone = faces_for_gui.clone();
+		let frame_clone = frame.clone();
+		let finished_clone = finished.clone();
+		thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
+	}
 
 	let _ =
 		thread::spawn(move || processors::start(frame, faces_for_gui, finished, face_processor))
