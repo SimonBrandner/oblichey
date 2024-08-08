@@ -50,7 +50,7 @@ impl Display for Error {
 
 pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
-	faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
+	faces: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
 ) {
 	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
@@ -68,43 +68,43 @@ pub fn start(
 			)),
 			..NativeOptions::default()
 		},
-		Box::new(|_| Box::new(GUI::new(frame, faces_for_gui, finished))),
+		Box::new(|_| Box::new(Gui::new(frame, faces, finished))),
 	);
 }
 
-struct GUI {
+struct Gui {
 	frame: Arc<Mutex<Option<Frame>>>,
-	faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
+	faces: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
 }
 
-impl GUI {
+impl Gui {
 	pub fn new(
 		frame: Arc<Mutex<Option<Frame>>>,
-		faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
+		faces: Arc<Mutex<Vec<FaceForGUI>>>,
 		finished: Arc<AtomicBool>,
 	) -> Self {
 		Self {
 			frame,
-			faces_for_gui,
+			faces,
 			finished,
 		}
 	}
 }
 
-impl GUI {
-	fn draw(&self, ctx: &egui::Context, frame: Frame, faces_for_gui: Vec<FaceForGUI>) {
+impl Gui {
+	fn draw(ctx: &egui::Context, frame: Frame, faces_for_gui: Vec<FaceForGUI>) {
 		egui::CentralPanel::default()
 			.frame(egui::Frame::none().inner_margin(0.0).outer_margin(0.0))
 			.show(ctx, |ui| {
-				self.draw_frame(ui, frame);
+				Self::draw_frame(ui, frame);
 				for face_for_gui in faces_for_gui {
-					self.draw_face(ui, face_for_gui);
+					Self::draw_face(ui, face_for_gui);
 				}
 			});
 	}
 
-	fn draw_frame(&self, ui: &mut Ui, frame: Frame) {
+	fn draw_frame(ui: &mut Ui, frame: Frame) {
 		let egui_image = ColorImage::from_rgb(
 			[
 				DETECTOR_INPUT_SIZE.x as usize,
@@ -122,7 +122,7 @@ impl GUI {
 		);
 	}
 
-	fn draw_face(&self, ui: &mut Ui, face_for_gui: FaceForGUI) {
+	fn draw_face(ui: &Ui, face_for_gui: FaceForGUI) {
 		let (text, color) = match face_for_gui.annotation {
 			FaceForGUIAnnotation::Name(n) => (n, FACE_RECTANGLE_YELLOW_COLOR),
 			FaceForGUIAnnotation::Warning(w) => match w {
@@ -137,10 +137,7 @@ impl GUI {
 				scanned_sample_count,
 				required_sample_count,
 			} => (
-				format!(
-					"Scanning: {}/{}",
-					scanned_sample_count, required_sample_count
-				),
+				format!("Scanning: {scanned_sample_count}/{required_sample_count}",),
 				FACE_RECTANGLE_WHITE_COLOR,
 			),
 		};
@@ -168,7 +165,7 @@ impl GUI {
 	}
 }
 
-impl eframe::App for GUI {
+impl eframe::App for Gui {
 	fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
 		self.finished.store(true, Ordering::SeqCst);
 	}
@@ -186,12 +183,9 @@ impl eframe::App for GUI {
 				panic!("Failed to get frame lock: {e}");
 			}
 		};
-		let image = match frame_lock.clone() {
-			Some(f) => f.clone(),
-			None => {
-				ctx.request_repaint();
-				return;
-			}
+		let Some(image) = frame_lock.clone() else {
+			ctx.request_repaint();
+			return;
 		};
 		drop(frame_lock);
 
@@ -206,7 +200,7 @@ impl eframe::App for GUI {
 			"Image height does not match network requirements!"
 		);
 
-		let faces_for_gui_lock = match self.faces_for_gui.lock() {
+		let faces_for_gui_lock = match self.faces.lock() {
 			Ok(l) => l,
 			Err(e) => {
 				self.finished.store(true, Ordering::SeqCst);
@@ -216,7 +210,7 @@ impl eframe::App for GUI {
 		let faces_for_gui = faces_for_gui_lock.clone();
 		drop(faces_for_gui_lock);
 
-		self.draw(ctx, image, faces_for_gui);
+		Self::draw(ctx, image, faces_for_gui);
 		ctx.request_repaint();
 	}
 }

@@ -29,7 +29,7 @@ fn main() {
 }
 
 fn get_onnx_file_path(model_name: &str) -> String {
-	format!("{}/{}.onnx", ONNX_DIR, model_name)
+	format!("{ONNX_DIR}/{model_name}.onnx")
 }
 
 fn import_onnx_model(model_name: &str) {
@@ -44,7 +44,7 @@ fn copy_weights_next_to_executable(
 	source_weights_dir: &Path,
 	new_weights_dir: &Path,
 ) {
-	let weights_file_name = format!("{}.mpk", model_name);
+	let weights_file_name = format!("{model_name}.mpk",);
 	let source_path = source_weights_dir.join(weights_file_name.clone());
 	let destination_path = new_weights_dir.join(weights_file_name);
 

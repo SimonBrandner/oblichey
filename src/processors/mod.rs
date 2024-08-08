@@ -11,10 +11,10 @@ use std::sync::{
 };
 
 pub fn start(
-	frame: Arc<Mutex<Option<Frame>>>,
-	faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>>,
-	finished: Arc<AtomicBool>,
-	face_processor: Arc<Mutex<dyn FaceProcessor>>,
+	frame: &Arc<Mutex<Option<Frame>>>,
+	faces_for_gui: &Arc<Mutex<Vec<FaceForGUI>>>,
+	finished: &Arc<AtomicBool>,
+	face_processor: &Arc<Mutex<dyn FaceProcessor + Send + Sync>>,
 ) {
 	let frame_processor = FrameProcessor::new();
 
@@ -58,7 +58,7 @@ pub fn start(
 				panic!("Failed to get detected faces lock: {e}");
 			}
 		};
-		*faces_for_gui_lock = new_faces_for_gui.clone();
+		faces_for_gui_lock.clone_from(&new_faces_for_gui);
 		drop(faces_for_gui_lock);
 	}
 }

@@ -42,7 +42,7 @@ fn main() {
 		Command::List => {
 			let face_embeddings = load_face_embeddings();
 			for (name, _) in face_embeddings {
-				println!("{}", name);
+				println!("{name}",);
 			}
 		}
 		Command::Test => {
@@ -61,10 +61,10 @@ fn main() {
 				Ok(l) => l,
 				Err(e) => panic!("{}", e),
 			};
-			let result = match auth_processor_lock.get_result() {
-				Some(r) => r,
-				None => unreachable!(),
+			let Some(result) = auth_processor_lock.get_result() else {
+				unreachable!()
 			};
+			drop(auth_processor_lock);
 			if result.authenticated {
 				println!("Authenticated!");
 			} else {
@@ -78,10 +78,11 @@ fn main() {
 				Ok(l) => l,
 				Err(e) => panic!("{}", e),
 			};
-			let result = match scan_processor_lock.get_result() {
-				Some(r) => r,
-				None => panic!("Scanning ended with no result!"),
+			let Some(result) = scan_processor_lock.get_result() else {
+				panic!("Scanning ended with no result!")
 			};
+
+			drop(scan_processor_lock);
 			save_face_embedding(&name, &result.face_embedding);
 		}
 	}
@@ -96,7 +97,7 @@ fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>, gu
 
 	let frame_clone = frame.clone();
 	let finished_clone = finished.clone();
-	thread::spawn(move || camera::start(frame_clone, finished_clone));
+	thread::spawn(move || camera::start(&frame_clone, &finished_clone));
 
 	if gui {
 		let faces_for_gui_clone = faces_for_gui.clone();
@@ -105,7 +106,8 @@ fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>, gu
 		thread::spawn(move || gui::start(frame_clone, faces_for_gui_clone, finished_clone));
 	}
 
-	let _ =
-		thread::spawn(move || processors::start(frame, faces_for_gui, finished, face_processor))
-			.join();
+	let _ = thread::spawn(move || {
+		processors::start(&frame, &faces_for_gui, &finished, &face_processor);
+	})
+	.join();
 }

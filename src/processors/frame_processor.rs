@@ -84,7 +84,7 @@ impl FrameProcessor {
 
 		let detector_input = self.normalize_detector_input(frame);
 		let detector_output = self.detector.forward(detector_input);
-		let face_rectangles = self.interpret_detector_output(detector_output);
+		let face_rectangles = Self::interpret_detector_output(detector_output);
 
 		let mut detected_faces = Vec::new();
 		let mut frame = frame.clone();
@@ -94,31 +94,30 @@ impl FrameProcessor {
 				face_data: if rectangle_large_enough_for_recognition(&rectangle) {
 					let recognizer_input = self.normalize_recognizer_input(&mut frame, &rectangle);
 					let recognizer_output = self.recognizer.forward(recognizer_input);
-					let face = self.interpret_recognizer_output(&recognizer_output);
+					let face = Self::interpret_recognizer_output(&recognizer_output);
 					Ok(face)
 				} else {
 					Err(FaceRecognitionError::TooSmall)
 				},
-			})
+			});
 		}
 
 		detected_faces
 	}
 
-	fn interpret_recognizer_output(&self, output: &Tensor<Backend, 2>) -> FaceRecognitionData {
+	fn interpret_recognizer_output(output: &Tensor<Backend, 2>) -> FaceRecognitionData {
 		let data = output
 			.to_data()
 			.to_vec::<f32>()
 			.expect("Embedding has an unexpected shape!");
 		let embedding_data =
 			FaceEmbeddingData::try_from(data).expect("Embedding has an unexpected shape!");
-		let embedding = FaceEmbedding::new(embedding_data);
+		let embedding = FaceEmbedding::new(&embedding_data);
 
 		FaceRecognitionData { embedding }
 	}
 
 	fn interpret_detector_output(
-		&self,
 		output: (Tensor<Backend, 3>, Tensor<Backend, 3>),
 	) -> Vec<Rectangle<u32>> {
 		let (confidences, boxes) = output;
@@ -141,9 +140,10 @@ impl FrameProcessor {
 				continue;
 			}
 
+			#[allow(clippy::cast_sign_loss)]
 			face_rectangles.push(Rectangle {
 				min: Vec2D::new(
-					(boxes[j + 0] * DETECTOR_INPUT_SIZE.x as f32) as u32,
+					(boxes[j] * DETECTOR_INPUT_SIZE.x as f32) as u32,
 					(boxes[j + 1] * DETECTOR_INPUT_SIZE.y as f32) as u32,
 				),
 				max: Vec2D::new(
@@ -164,9 +164,9 @@ impl FrameProcessor {
 					> INTERSECTION_OVER_UNION_THRESHOLD
 				{
 					face_rectangles.remove(j);
-					j -= 1
+					j -= 1;
 				}
-				j += 1
+				j += 1;
 			}
 			i += 1;
 		}
@@ -179,7 +179,7 @@ impl FrameProcessor {
 		let shape = [
 			DETECTOR_INPUT_SIZE.y as usize,
 			DETECTOR_INPUT_SIZE.x as usize,
-			3 as usize,
+			3_usize,
 		];
 
 		// Make into a tensor
@@ -192,9 +192,7 @@ impl FrameProcessor {
 		let permutated = normalized.permute([2, 0, 1]);
 
 		// Make the tensor the correct shape: batch, channels, height, width
-		let unsqueezed = permutated.unsqueeze::<4>();
-
-		unsqueezed
+		permutated.unsqueeze::<4>()
 	}
 
 	fn normalize_recognizer_input(
@@ -221,7 +219,7 @@ impl FrameProcessor {
 		let shape = [
 			RECOGNIZER_INPUT_SIZE.y as usize,
 			RECOGNIZER_INPUT_SIZE.x as usize,
-			3 as usize,
+			3_usize,
 		];
 
 		// Make into a tensor
@@ -234,8 +232,6 @@ impl FrameProcessor {
 		let permutated = normalized.permute([2, 0, 1]);
 
 		// Make the tensor the correct shape: batch, channels, height, width
-		let unsqueezed = permutated.unsqueeze::<4>();
-
-		unsqueezed
+		permutated.unsqueeze::<4>()
 	}
 }

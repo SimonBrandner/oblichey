@@ -26,7 +26,7 @@ pub struct ScanProcessor {
 }
 
 impl ScanProcessor {
-	pub fn new() -> Self {
+	pub const fn new() -> Self {
 		Self {
 			result: None,
 			embedding_samples: Vec::new(),
@@ -43,11 +43,11 @@ impl FaceProcessor for ScanProcessor {
 		self.result.is_some()
 	}
 
-	fn process_faces(&mut self, faces_for_processing: Vec<FaceForProcessing>) -> Vec<FaceForGUI> {
+	fn process_faces(&mut self, faces: Vec<FaceForProcessing>) -> Vec<FaceForGUI> {
 		// Handle edge-cases
-		if faces_for_processing.len() > 1 {
+		if faces.len() > 1 {
 			self.embedding_samples.clear();
-			return faces_for_processing
+			return faces
 				.into_iter()
 				.map(|f| FaceForGUI {
 					rectangle: f.rectangle,
@@ -57,20 +57,17 @@ impl FaceProcessor for ScanProcessor {
 				})
 				.collect();
 		};
-		let face_for_processing = match faces_for_processing.get(0) {
-			Some(f) => f,
-			None => {
-				self.embedding_samples.clear();
-				return vec![];
-			}
+		let Some(face) = faces.first() else {
+			self.embedding_samples.clear();
+			return vec![];
 		};
-		let embedding = match face_for_processing.face_data {
+		let embedding = match face.face_data {
 			Ok(f) => f.embedding,
 			Err(e) => match e {
 				FaceRecognitionError::TooSmall => {
 					self.embedding_samples.clear();
 					return vec![FaceForGUI {
-						rectangle: face_for_processing.rectangle,
+						rectangle: face.rectangle,
 						annotation: FaceForGUIAnnotation::Warning(
 							FaceForGUIAnnotationWarning::TooSmall,
 						),
@@ -83,7 +80,7 @@ impl FaceProcessor for ScanProcessor {
 		// have to satisfy the similarity requirement. To avoid having to check each two samples we
 		// take and an average of all of them. We calculate the average in each run of this
 		// function to give all samples the same weight
-		if self.embedding_samples.len() > 0 {
+		if !self.embedding_samples.is_empty() {
 			let average_embedding = FaceEmbedding::average_embedding(&self.embedding_samples);
 			let similarity = average_embedding.cosine_similarity(&embedding);
 
@@ -103,7 +100,7 @@ impl FaceProcessor for ScanProcessor {
 
 		// Return info to be displayed in the GUI
 		vec![FaceForGUI {
-			rectangle: face_for_processing.rectangle,
+			rectangle: face.rectangle,
 			annotation: FaceForGUIAnnotation::ScanningState {
 				scanned_sample_count: self.embedding_samples.len(),
 				required_sample_count: SCAN_SAMPLE_COUNT,
@@ -135,7 +132,7 @@ impl AuthProcessor {
 		}
 	}
 
-	pub fn get_result(&self) -> Option<AuthProcessorResult> {
+	pub const fn get_result(&self) -> Option<AuthProcessorResult> {
 		self.result
 	}
 
@@ -156,16 +153,14 @@ impl AuthProcessor {
 
 		let mut best_match: Option<(String, f32)> = None;
 		for (stored_face_embedding_name, stored_face_embedding) in &self.stored_face_embeddings {
-			let similarity = face_data
-				.embedding
-				.cosine_similarity(&stored_face_embedding);
+			let similarity = face_data.embedding.cosine_similarity(stored_face_embedding);
 			if similarity < SIMILARITY_THRESHOLD {
 				continue;
 			}
 			match best_match {
 				Some((_, best_match_similarity)) => {
 					if similarity > best_match_similarity {
-						best_match = Some((stored_face_embedding_name.clone(), similarity))
+						best_match = Some((stored_face_embedding_name.clone(), similarity));
 					}
 				}
 				None => best_match = Some((stored_face_embedding_name.clone(), similarity)),
@@ -199,23 +194,23 @@ impl FaceProcessor for AuthProcessor {
 		if self.have_timed_out() {
 			self.result = Some(AuthProcessorResult {
 				authenticated: false,
-			})
+			});
 		}
 
-		let mut faces_for_gui = Vec::new();
+		let mut processed_faces = Vec::new();
 		for face_for_processing in faces_for_processing {
-			let face_for_gui = self.process_face(&face_for_processing);
+			let processed_face = self.process_face(&face_for_processing);
 			if !self.testing_mode {
-				if let FaceForGUIAnnotation::Name(_) = face_for_gui.annotation {
+				if let FaceForGUIAnnotation::Name(_) = processed_face.annotation {
 					self.result = Some(AuthProcessorResult {
 						authenticated: true,
-					})
+					});
 				}
 			}
 
-			faces_for_gui.push(face_for_gui);
+			processed_faces.push(processed_face);
 		}
 
-		faces_for_gui
+		processed_faces
 	}
 }

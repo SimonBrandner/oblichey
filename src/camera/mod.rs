@@ -3,9 +3,9 @@ mod utils;
 use crate::geometry::Vec2D;
 use image::{ImageBuffer, ImageError, Rgb};
 use std::fmt::Display;
+use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::{io, usize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use utils::{brightness, convert_grey_to_rgb, convert_yuyv_to_rgb, reshape_frame};
@@ -24,15 +24,15 @@ pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
 #[derive(Clone, Copy, Debug, EnumIter)]
 pub enum SupportedPixelFormat {
-	YUYV,
-	GREY,
+	Yuyv,
+	Gray,
 }
 
 impl SupportedPixelFormat {
-	pub fn to_fourcc(&self) -> FourCC {
+	pub fn to_fourcc(self) -> FourCC {
 		let bytes = match self {
-			Self::GREY => b"GREY",
-			Self::YUYV => b"YUYV",
+			Self::Gray => b"GREY",
+			Self::Yuyv => b"YUYV",
 		};
 		FourCC::new(bytes)
 	}
@@ -74,7 +74,7 @@ pub struct Camera<'a> {
 
 impl<'a> Camera<'a> {
 	pub fn new() -> Result<Self, Error> {
-		let mut device = Device::with_path(CAMERA_PATH)?;
+		let device = Device::with_path(CAMERA_PATH)?;
 		let mut format = device.format()?;
 		let frame_size = Vec2D::new(format.width, format.height);
 
@@ -88,17 +88,14 @@ impl<'a> Camera<'a> {
 				break;
 			}
 		}
-		let pixel_format = match chosen_pixel_format {
-			Some(f) => f,
-			None => {
-				return Err(Error::Format(String::from(
-					"Failed to set the desired format",
-				)));
-			}
+		let Some(pixel_format) = chosen_pixel_format else {
+			return Err(Error::Format(String::from(
+				"Failed to set the desired format",
+			)));
 		};
 
 		Ok(Self {
-			stream: Stream::with_buffers(&mut device, Type::VideoCapture, 4)?,
+			stream: Stream::with_buffers(&device, Type::VideoCapture, 4)?,
 			pixel_format,
 			frame_size,
 		})
@@ -109,16 +106,16 @@ impl<'a> Camera<'a> {
 		Ok(frame_buffer.to_vec())
 	}
 
-	pub fn get_pixel_format(&self) -> SupportedPixelFormat {
+	pub const fn get_pixel_format(&self) -> SupportedPixelFormat {
 		self.pixel_format
 	}
 
-	pub fn get_frame_size(&self) -> Vec2D<u32> {
+	pub const fn get_frame_size(&self) -> Vec2D<u32> {
 		self.frame_size
 	}
 }
 
-pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
+pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 	let mut camera = match Camera::new() {
 		Ok(c) => c,
 		Err(e) => {
@@ -144,22 +141,22 @@ pub fn start(frame: Arc<Mutex<Option<Frame>>>, finished: Arc<AtomicBool>) {
 		};
 
 		let rgb_frame = match pixel_format {
-			SupportedPixelFormat::YUYV => convert_yuyv_to_rgb(&new_frame, &frame_size),
-			SupportedPixelFormat::GREY => {
+			SupportedPixelFormat::Yuyv => convert_yuyv_to_rgb(&new_frame, frame_size),
+			SupportedPixelFormat::Gray => {
 				// We need to ignore very dark frames in some way. It's difficult to pick a single
 				// threshold for "too dark", so we instead measure the brightness decrease
-				let brightness = brightness(&new_frame, &frame_size);
+				let brightness = brightness(&new_frame, frame_size);
 				let brightness_decrease = last_brightness - brightness;
 				last_brightness = brightness;
 				if brightness_decrease > MAX_BRIGHTNESS_DECREASE {
 					continue;
 				}
 
-				convert_grey_to_rgb(&new_frame, &frame_size)
+				convert_grey_to_rgb(&new_frame, frame_size)
 			}
 		};
 
-		let reshaped_frame = reshape_frame(rgb_frame, &frame_size);
+		let reshaped_frame = reshape_frame(&rgb_frame, frame_size);
 
 		let mut frame_lock = match frame.lock() {
 			Ok(l) => l,

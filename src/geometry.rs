@@ -6,36 +6,35 @@ use std::{
 
 pub trait Vec2DNumber
 where
-	Self: NumCast,
-	Self: Add<Output = Self>,
-	Self: Mul<Output = Self>,
-	Self: Sub<Output = Self>,
-	Self: Ord,
-	Self: Zero,
-	Self: Clone,
-	Self: Debug,
-	Self: Copy,
+	Self: NumCast
+		+ Add<Output = Self>
+		+ Mul<Output = Self>
+		+ Sub<Output = Self>
+		+ Ord
+		+ Zero
+		+ Clone
+		+ Debug
+		+ Copy,
 {
 }
 
-impl<T> Vec2DNumber for T
-where
-	T: NumCast,
-	T: Add<Output = T>,
-	T: Mul<Output = T>,
-	T: Sub<Output = T>,
-	T: Ord,
-	T: Zero,
-	T: Clone,
-	T: Debug,
-	T: Copy,
+impl<T> Vec2DNumber for T where
+	Self: NumCast
+		+ Add<Output = Self>
+		+ Mul<Output = Self>
+		+ Sub<Output = Self>
+		+ Ord
+		+ Zero
+		+ Clone
+		+ Debug
+		+ Copy
 {
 }
 
 fn calculate_length<T: Vec2DNumber>(min: T, max: T) -> Option<T> {
 	let min_f32 = <f32 as NumCast>::from(min)?;
 	let max_f32 = <f32 as NumCast>::from(max)?;
-	Some(<T as NumCast>::from((max_f32 - min_f32).abs())?)
+	<T as NumCast>::from((max_f32 - min_f32).abs())
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -45,24 +44,24 @@ pub struct Vec2D<T: Vec2DNumber> {
 }
 
 impl<T: Vec2DNumber> Vec2D<T> {
-	pub fn new(x: T, y: T) -> Self {
+	pub const fn new(x: T, y: T) -> Self {
 		Self { x, y }
 	}
 
-	pub fn to_i32(&self) -> Option<Vec2D<i32>> {
+	pub fn to_i32(self) -> Option<Vec2D<i32>> {
 		Some(Vec2D::new(
 			<i32 as NumCast>::from(self.x)?,
 			<i32 as NumCast>::from(self.y)?,
 		))
 	}
 
-	pub fn with_flipped_axes(&self) -> Self {
+	pub const fn with_flipped_axes(&self) -> Self {
 		Self::new(self.y, self.x)
 	}
 }
 
 impl<T: Vec2DNumber> Add for Vec2D<T> {
-	type Output = Vec2D<T>;
+	type Output = Self;
 
 	fn add(self, rhs: Self) -> Self::Output {
 		Self {
@@ -73,7 +72,7 @@ impl<T: Vec2DNumber> Add for Vec2D<T> {
 }
 
 impl<T: Vec2DNumber> Sub for Vec2D<T> {
-	type Output = Vec2D<T>;
+	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self::Output {
 		Self {
@@ -84,7 +83,7 @@ impl<T: Vec2DNumber> Sub for Vec2D<T> {
 }
 
 impl<T: Vec2DNumber + Neg<Output = T>> Neg for Vec2D<T> {
-	type Output = Vec2D<T>;
+	type Output = Self;
 
 	fn neg(self) -> Self::Output {
 		Self {
@@ -101,27 +100,27 @@ pub struct Rectangle<T: Vec2DNumber> {
 }
 
 impl<T: Vec2DNumber> Rectangle<T> {
-	pub fn new(min: Vec2D<T>, max: Vec2D<T>) -> Self {
+	pub const fn new(min: Vec2D<T>, max: Vec2D<T>) -> Self {
 		Self { min, max }
 	}
 
-	pub fn to_i32(&self) -> Option<Rectangle<i32>> {
+	pub fn to_i32(self) -> Option<Rectangle<i32>> {
 		Some(Rectangle::new(self.min.to_i32()?, self.max.to_i32()?))
 	}
 
 	pub fn width(&self) -> Option<T> {
-		Some(calculate_length(self.min.x, self.max.x)?)
+		calculate_length(self.min.x, self.max.x)
 	}
 
 	pub fn height(&self) -> Option<T> {
-		Some(calculate_length(self.min.y, self.max.y)?)
+		calculate_length(self.min.y, self.max.y)
 	}
 
 	pub fn size(&self) -> Option<Vec2D<T>> {
 		Some(Vec2D::new(self.width()?, self.height()?))
 	}
 
-	pub fn intersection_over_union(&self, other: &Rectangle<T>) -> Option<f32> {
+	pub fn intersection_over_union(&self, other: &Self) -> Option<f32> {
 		if self.min.x > other.max.x {
 			return Some(0.0);
 		}

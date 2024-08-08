@@ -12,38 +12,39 @@ const CENTER_RECTANGLE_SIZE: Vec2D<i32> = Vec2D { x: 14, y: 4 };
 const SIDE_RECTANGLE_SIZE: Vec2D<i32> = Vec2D { x: 12, y: 4 };
 const MIN_SPACE_BETWEEN_SIDE_RECTANGLES: i32 = 6;
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum Orientation {
 	Horizontal,
 	Vertical,
 }
 
+#[allow(clippy::vec_init_then_push)]
 fn draw_corner_rectangles(
-	top_left_position: &Vec2D<i32>,
-	top_right_position: &Vec2D<i32>,
-	bottom_left_position: &Vec2D<i32>,
-	bottom_right_position: &Vec2D<i32>,
+	top_left_position: Vec2D<i32>,
+	top_right_position: Vec2D<i32>,
+	bottom_left_position: Vec2D<i32>,
+	bottom_right_position: Vec2D<i32>,
 ) -> Vec<Rectangle<i32>> {
 	let mut rectangles = Vec::new();
 
 	rectangles.push(Rectangle::new(
-		*top_left_position,
-		*top_left_position + CORNER_RECTANGLE_SIZE,
+		top_left_position,
+		top_left_position + CORNER_RECTANGLE_SIZE,
 	));
 	rectangles.push(Rectangle::new(
-		*top_left_position,
-		*top_left_position + CORNER_RECTANGLE_SIZE.with_flipped_axes(),
+		top_left_position,
+		top_left_position + CORNER_RECTANGLE_SIZE.with_flipped_axes(),
 	));
 
 	rectangles.push(Rectangle::new(
-		*top_right_position,
+		top_right_position,
 		Vec2D::new(
 			top_right_position.x - CORNER_RECTANGLE_SIZE.x,
 			top_right_position.y + CORNER_RECTANGLE_SIZE.y,
 		),
 	));
 	rectangles.push(Rectangle::new(
-		*top_right_position,
+		top_right_position,
 		Vec2D::new(
 			top_right_position.x - CORNER_RECTANGLE_SIZE.y,
 			top_right_position.y + CORNER_RECTANGLE_SIZE.x,
@@ -51,14 +52,14 @@ fn draw_corner_rectangles(
 	));
 
 	rectangles.push(Rectangle::new(
-		*bottom_left_position,
+		bottom_left_position,
 		Vec2D::new(
 			bottom_left_position.x + CORNER_RECTANGLE_SIZE.x,
 			bottom_left_position.y - CORNER_RECTANGLE_SIZE.y,
 		),
 	));
 	rectangles.push(Rectangle::new(
-		*bottom_left_position,
+		bottom_left_position,
 		Vec2D::new(
 			bottom_left_position.x + CORNER_RECTANGLE_SIZE.y,
 			bottom_left_position.y - CORNER_RECTANGLE_SIZE.x,
@@ -66,22 +67,22 @@ fn draw_corner_rectangles(
 	));
 
 	rectangles.push(Rectangle::new(
-		*bottom_right_position,
-		*bottom_right_position - CORNER_RECTANGLE_SIZE,
+		bottom_right_position,
+		bottom_right_position - CORNER_RECTANGLE_SIZE,
 	));
 	rectangles.push(Rectangle::new(
-		*bottom_right_position,
-		*bottom_right_position - CORNER_RECTANGLE_SIZE.with_flipped_axes(),
+		bottom_right_position,
+		bottom_right_position - CORNER_RECTANGLE_SIZE.with_flipped_axes(),
 	));
 
 	rectangles
 }
 
 fn draw_center_rectangles(
-	square_size: &i32,
-	small_rectangles_offset: &i32,
-	top_left_position: &Vec2D<i32>,
-	bottom_right_position: &Vec2D<i32>,
+	square_size: i32,
+	small_rectangles_offset: i32,
+	top_left_position: Vec2D<i32>,
+	bottom_right_position: Vec2D<i32>,
 ) -> Vec<Rectangle<i32>> {
 	let center_rectangle_offset = square_size / 2 - (CENTER_RECTANGLE_SIZE.y / 2);
 	let mut rectangles = Vec::new();
@@ -126,19 +127,20 @@ fn draw_center_rectangles(
 }
 
 fn draw_side_rectangles_segment(
-	number_of_small_rectangles: &i32,
-	shift: &i32,
-	small_rectangle_position: &Vec2D<i32>,
+	number_of_small_rectangles: i32,
+	shift: i32,
+	small_rectangle_position: Vec2D<i32>,
 	orientation: Orientation,
 ) -> Vec<Rectangle<i32>> {
-	let mut small_rectangle_position = *small_rectangle_position;
+	let mut small_rectangle_position = small_rectangle_position;
 	let mut rectangles = Vec::new();
-	for _ in 0..*number_of_small_rectangles {
-		let mut small_rect = SIDE_RECTANGLE_SIZE;
-		if orientation == Orientation::Vertical {
-			small_rect = SIDE_RECTANGLE_SIZE.with_flipped_axes();
-		}
-		if *shift < 0 {
+	for _ in 0..number_of_small_rectangles {
+		let mut small_rect = if orientation == Orientation::Vertical {
+			SIDE_RECTANGLE_SIZE.with_flipped_axes()
+		} else {
+			SIDE_RECTANGLE_SIZE
+		};
+		if shift < 0 {
 			small_rect = -small_rect;
 		}
 
@@ -190,10 +192,10 @@ fn calculate_square_properties(
 }
 
 fn draw_side_rectangles(
-	square_size: &i32,
-	small_rectangles_offset: &i32,
-	top_left_position: &Vec2D<i32>,
-	bottom_right_position: &Vec2D<i32>,
+	square_size: i32,
+	small_rectangles_offset: i32,
+	top_left_position: Vec2D<i32>,
+	bottom_right_position: Vec2D<i32>,
 ) -> Vec<Rectangle<i32>> {
 	let small_rectangles_space =
 		(square_size - (2 * CORNER_RECTANGLE_SIZE.x + CENTER_RECTANGLE_SIZE.y)) / 2;
@@ -207,72 +209,72 @@ fn draw_side_rectangles(
 
 	let mut rectangles = Vec::new();
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(size_of_space + SIDE_RECTANGLE_SIZE.x),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		size_of_space + SIDE_RECTANGLE_SIZE.x,
+		Vec2D::new(
 			top_left_position.x + CORNER_RECTANGLE_SIZE.x + size_of_space,
 			top_left_position.y + small_rectangles_offset,
 		),
 		Orientation::Horizontal,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(size_of_space + SIDE_RECTANGLE_SIZE.x),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		size_of_space + SIDE_RECTANGLE_SIZE.x,
+		Vec2D::new(
 			top_left_position.x + ((square_size + CENTER_RECTANGLE_SIZE.y) / 2) + size_of_space,
 			top_left_position.y + small_rectangles_offset,
 		),
 		Orientation::Horizontal,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(size_of_space + SIDE_RECTANGLE_SIZE.x),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		size_of_space + SIDE_RECTANGLE_SIZE.x,
+		Vec2D::new(
 			top_left_position.x + small_rectangles_offset,
 			top_left_position.y + CORNER_RECTANGLE_SIZE.x + size_of_space,
 		),
 		Orientation::Vertical,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(size_of_space + SIDE_RECTANGLE_SIZE.x),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		size_of_space + SIDE_RECTANGLE_SIZE.x,
+		Vec2D::new(
 			top_left_position.x + small_rectangles_offset,
 			top_left_position.y + ((square_size + CENTER_RECTANGLE_SIZE.y) / 2) + size_of_space,
 		),
 		Orientation::Vertical,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(-(size_of_space + SIDE_RECTANGLE_SIZE.x)),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		-(size_of_space + SIDE_RECTANGLE_SIZE.x),
+		Vec2D::new(
 			bottom_right_position.x - CORNER_RECTANGLE_SIZE.x - size_of_space,
 			bottom_right_position.y - small_rectangles_offset,
 		),
 		Orientation::Horizontal,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(-(size_of_space + SIDE_RECTANGLE_SIZE.x)),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		-(size_of_space + SIDE_RECTANGLE_SIZE.x),
+		Vec2D::new(
 			bottom_right_position.x - ((square_size + CENTER_RECTANGLE_SIZE.y) / 2) - size_of_space,
 			bottom_right_position.y - small_rectangles_offset,
 		),
 		Orientation::Horizontal,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(-(size_of_space + SIDE_RECTANGLE_SIZE.x)),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		-(size_of_space + SIDE_RECTANGLE_SIZE.x),
+		Vec2D::new(
 			bottom_right_position.x - small_rectangles_offset,
 			bottom_right_position.y - CORNER_RECTANGLE_SIZE.x - size_of_space,
 		),
 		Orientation::Vertical,
 	));
 	rectangles.extend(draw_side_rectangles_segment(
-		&number_of_small_rectangles,
-		&(-(size_of_space + SIDE_RECTANGLE_SIZE.x)),
-		&Vec2D::new(
+		number_of_small_rectangles,
+		-(size_of_space + SIDE_RECTANGLE_SIZE.x),
+		Vec2D::new(
 			bottom_right_position.x - small_rectangles_offset,
 			bottom_right_position.y - ((square_size + CENTER_RECTANGLE_SIZE.y) / 2) - size_of_space,
 		),
@@ -300,22 +302,22 @@ pub fn draw_poi_square(rectangle: Rectangle<u32>) -> (Vec<Rectangle<i32>>, Vec2D
 
 	let mut rectangles = Vec::new();
 	rectangles.extend(draw_corner_rectangles(
-		&top_left_position,
-		&top_right_position,
-		&bottom_left_position,
-		&bottom_right_position,
+		top_left_position,
+		top_right_position,
+		bottom_left_position,
+		bottom_right_position,
 	));
 	rectangles.extend(draw_center_rectangles(
-		&square_size,
-		&small_rectangles_offset,
-		&top_left_position,
-		&bottom_right_position,
+		square_size,
+		small_rectangles_offset,
+		top_left_position,
+		bottom_right_position,
 	));
 	rectangles.extend(draw_side_rectangles(
-		&square_size,
-		&small_rectangles_offset,
-		&top_left_position,
-		&bottom_right_position,
+		square_size,
+		small_rectangles_offset,
+		top_left_position,
+		bottom_right_position,
 	));
 
 	(rectangles, top_right_position)

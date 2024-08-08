@@ -41,7 +41,7 @@ impl Div<f32> for FaceEmbedding {
 	type Output = Self;
 
 	fn div(self, rhs: f32) -> Self::Output {
-		let mut out = FaceEmbedding::default();
+		let mut out = Self::default();
 		for index in 0..EMBEDDING_LENGTH {
 			out.data[index] = self.data[index] / rhs;
 		}
@@ -51,8 +51,8 @@ impl Div<f32> for FaceEmbedding {
 }
 
 impl FaceEmbedding {
-	pub fn new(data: FaceEmbeddingData) -> Self {
-		Self { data }
+	pub const fn new(data: &FaceEmbeddingData) -> Self {
+		Self { data: *data }
 	}
 
 	pub fn magnitude(&self) -> f32 {
@@ -77,8 +77,8 @@ impl FaceEmbedding {
 		self.dot_product(other) / (self.magnitude() * other.magnitude())
 	}
 
-	pub fn average_embedding(embeddings: &[FaceEmbedding]) -> FaceEmbedding {
-		let mut sum_embedding = FaceEmbedding::default();
+	pub fn average_embedding(embeddings: &[Self]) -> Self {
+		let mut sum_embedding = Self::default();
 
 		for embedding in embeddings {
 			sum_embedding += *embedding;
