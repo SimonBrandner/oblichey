@@ -7,10 +7,7 @@ use crate::{
 };
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use burn::tensor::{Tensor, TensorData};
-use image::{
-	imageops::{crop, resize, FilterType},
-	RgbImage,
-};
+use image::imageops::{crop, resize, FilterType};
 
 const WEIGHTS_DIRECTORY_NAME: &str = "weights";
 const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
@@ -70,7 +67,7 @@ impl FrameProcessor {
 		}
 	}
 
-	pub fn process_frame(&self, frame: &RgbImage) -> Vec<FaceForProcessing> {
+	pub fn process_frame(&self, frame: &Frame) -> Vec<FaceForProcessing> {
 		assert_eq!(
 			frame.width(),
 			DETECTOR_INPUT_SIZE.x,
