@@ -39,7 +39,6 @@ pub fn load_face_embeddings() -> HashMap<String, FaceEmbedding> {
 			Ok(f) => f,
 			Err(e) => panic!("Failed to get file: {e}"),
 		};
-		println!("Path: {:?}", file.path());
 		let serialized = fs::read(file.path()).unwrap();
 		let face_embedding = deserialize(&serialized).unwrap();
 		face_embeddings.insert(
