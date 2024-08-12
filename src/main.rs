@@ -72,6 +72,12 @@ fn main() {
 			}
 		}
 		Command::Scan { name } => {
+			let face_embeddings = load_face_embeddings();
+			if face_embeddings.contains_key(&name) {
+				println!("Face of this name already exists. Either pick a different name or remove the existing face.");
+				return;
+			}
+
 			let scan_processor = Arc::new(Mutex::new(ScanProcessor::new()));
 			start_threads(scan_processor.clone(), true);
 			let scan_processor_lock = match scan_processor.lock() {
