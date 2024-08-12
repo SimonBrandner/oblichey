@@ -90,6 +90,7 @@ fn main() {
 
 			drop(scan_processor_lock);
 			save_face_embedding(&name, &result.face_embedding);
+			println!("Face scan was successful!");
 		}
 	}
 }
