@@ -22,7 +22,7 @@ const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
 
 pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq)]
 pub enum SupportedPixelFormat {
 	Yuyv,
 	Gray,
@@ -93,6 +93,11 @@ impl<'a> Camera<'a> {
 				"Failed to set the desired format",
 			)));
 		};
+		#[cfg(not(feature = "rgb-webcam"))]
+		assert!(
+			pixel_format == SupportedPixelFormat::Gray,
+			"Your camera does not appear to be support IR!"
+		);
 
 		Ok(Self {
 			stream: Stream::with_buffers(&device, Type::VideoCapture, 4)?,
