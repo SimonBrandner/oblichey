@@ -3,17 +3,16 @@ mod poi;
 
 use crate::{
 	camera::{self, Frame},
-	gui::{
-		geometry::{ToPos2, ToRect},
-		poi::draw_poi_square,
-	},
+	gui::{geometry::ToRect, poi::draw_poi_square},
 	processors::{
 		face::{FaceForGUI, FaceForGUIAnnotation, FaceForGUIAnnotationWarning},
 		frame_processor::DETECTOR_INPUT_SIZE,
 	},
 };
 use eframe::{
-	egui::{self, Align2, Color32, ColorImage, FontFamily, FontId, Rounding, Ui, Vec2},
+	egui::{
+		self, Align2, Color32, ColorImage, FontFamily, FontId, Rounding, Ui, Vec2, ViewportBuilder,
+	},
 	EventLoopBuilderHook, NativeOptions,
 };
 use std::{
@@ -23,7 +22,10 @@ use std::{
 		Arc, Mutex,
 	},
 };
-use winit::platform::unix::EventLoopBuilderExtUnix;
+use winit::platform::wayland;
+use winit::platform::x11;
+
+use self::geometry::ToEguiStructs;
 
 const FACE_RECTANGLE_WHITE_COLOR: Color32 = Color32::from_rgb(255, 255, 255);
 const FACE_RECTANGLE_GREY_COLOR: Color32 = Color32::from_rgb(192, 192, 192);
@@ -54,21 +56,25 @@ pub fn start(
 	finished: Arc<AtomicBool>,
 ) {
 	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
-		event_loop_builder.with_any_thread(true);
+		wayland::EventLoopBuilderExtWayland::with_any_thread(event_loop_builder, true);
+		x11::EventLoopBuilderExtX11::with_any_thread(event_loop_builder, true);
 	}));
+	let viewport = ViewportBuilder::default()
+		.with_resizable(false)
+		.with_inner_size(
+			DETECTOR_INPUT_SIZE
+				.to_vec2()
+				.expect("Failed to convert Vec2D to Vec2!"),
+		);
 
-	eframe::run_native(
+	let _ = eframe::run_native(
 		"Gday",
 		NativeOptions {
+			viewport,
 			event_loop_builder,
-			resizable: false,
-			initial_window_size: Some(Vec2::new(
-				DETECTOR_INPUT_SIZE.x as f32,
-				DETECTOR_INPUT_SIZE.y as f32,
-			)),
 			..NativeOptions::default()
 		},
-		Box::new(|_| Box::new(Gui::new(frame, faces, finished))),
+		Box::new(|_| Ok(Box::new(Gui::new(frame, faces, finished)))),
 	);
 }
 
@@ -116,10 +122,7 @@ impl Gui {
 			ui.ctx()
 				.load_texture("Camera", egui_image, egui::TextureOptions::default());
 
-		ui.image(
-			&image_texture,
-			Vec2::new(DETECTOR_INPUT_SIZE.x as f32, DETECTOR_INPUT_SIZE.y as f32),
-		);
+		ui.image(&image_texture);
 	}
 
 	fn draw_face(ui: &Ui, face_for_gui: FaceForGUI) {
@@ -166,9 +169,9 @@ impl Gui {
 }
 
 impl eframe::App for Gui {
-	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+	fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
 		if self.finished.load(Ordering::SeqCst) {
-			frame.close();
+			ctx.send_viewport_cmd(egui::ViewportCommand::Close);
 			return;
 		}
 

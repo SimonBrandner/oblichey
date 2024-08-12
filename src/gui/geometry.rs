@@ -1,14 +1,22 @@
 use crate::geometry::{Rectangle, Vec2D, Vec2DNumber};
-use eframe::egui::{Pos2, Rect};
+use eframe::egui::{Pos2, Rect, Vec2};
 use std::cmp::{max, min};
 
-pub trait ToPos2 {
+pub trait ToEguiStructs {
 	fn to_pos2(&self) -> Option<Pos2>;
+	fn to_vec2(&self) -> Option<Vec2>;
 }
 
-impl<T: Vec2DNumber> ToPos2 for Vec2D<T> {
+impl<T: Vec2DNumber> ToEguiStructs for Vec2D<T> {
 	fn to_pos2(&self) -> Option<Pos2> {
 		Some(Pos2 {
+			x: self.x.to_f32()?,
+			y: self.y.to_f32()?,
+		})
+	}
+
+	fn to_vec2(&self) -> Option<Vec2> {
+		Some(Vec2 {
 			x: self.x.to_f32()?,
 			y: self.y.to_f32()?,
 		})
