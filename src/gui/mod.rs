@@ -3,7 +3,10 @@ mod poi;
 
 use crate::{
 	camera::{self, Frame},
-	gui::{geometry::ToRect, poi::draw_poi_square},
+	gui::{
+		geometry::{RectangleToEgui, Vec2DToEgui},
+		poi::draw_poi_square,
+	},
 	processors::{
 		face::{FaceForGUI, FaceForGUIAnnotation, FaceForGUIAnnotationWarning},
 		frame_processor::DETECTOR_INPUT_SIZE,
@@ -24,8 +27,6 @@ use std::{
 };
 use winit::platform::wayland;
 use winit::platform::x11;
-
-use self::geometry::ToEguiStructs;
 
 const FACE_RECTANGLE_WHITE_COLOR: Color32 = Color32::from_rgb(255, 255, 255);
 const FACE_RECTANGLE_GREY_COLOR: Color32 = Color32::from_rgb(192, 192, 192);
@@ -50,6 +51,7 @@ impl Display for Error {
 	}
 }
 
+/// Start the GUI loop
 pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
 	faces: Arc<Mutex<Vec<FaceForGUI>>>,
@@ -99,6 +101,7 @@ impl Gui {
 }
 
 impl Gui {
+	/// Draws the window contents
 	fn draw(ctx: &egui::Context, frame: Frame, faces_for_gui: Vec<FaceForGUI>) {
 		egui::CentralPanel::default()
 			.frame(egui::Frame::none().inner_margin(0.0).outer_margin(0.0))
@@ -110,6 +113,7 @@ impl Gui {
 			});
 	}
 
+	/// Draws the frame
 	fn draw_frame(ui: &mut Ui, frame: Frame) {
 		let egui_image = ColorImage::from_rgb(
 			[
@@ -125,6 +129,7 @@ impl Gui {
 		ui.image(&image_texture);
 	}
 
+	/// Draws a face
 	fn draw_face(ui: &Ui, face_for_gui: FaceForGUI) {
 		let (text, color) = match face_for_gui.annotation {
 			FaceForGUIAnnotation::Name(n) => (n, FACE_RECTANGLE_YELLOW_COLOR),

@@ -31,7 +31,8 @@ impl<T> Vec2DNumber for T where
 {
 }
 
-fn calculate_length<T: Vec2DNumber>(min: T, max: T) -> Option<T> {
+/// Calculates distance between two points (min and max)
+fn calculate_distance<T: Vec2DNumber>(min: T, max: T) -> Option<T> {
 	let min_f32 = <f32 as NumCast>::from(min)?;
 	let max_f32 = <f32 as NumCast>::from(max)?;
 	<T as NumCast>::from((max_f32 - min_f32).abs())
@@ -55,6 +56,7 @@ impl<T: Vec2DNumber> Vec2D<T> {
 		))
 	}
 
+	/// Returns a new `Vec2D` where the x and y axes are switched (x becomes y and y becomes x)
 	pub const fn with_flipped_axes(&self) -> Self {
 		Self::new(self.y, self.x)
 	}
@@ -109,17 +111,19 @@ impl<T: Vec2DNumber> Rectangle<T> {
 	}
 
 	pub fn width(&self) -> Option<T> {
-		calculate_length(self.min.x, self.max.x)
+		calculate_distance(self.min.x, self.max.x)
 	}
 
 	pub fn height(&self) -> Option<T> {
-		calculate_length(self.min.y, self.max.y)
+		calculate_distance(self.min.y, self.max.y)
 	}
 
 	pub fn size(&self) -> Option<Vec2D<T>> {
 		Some(Vec2D::new(self.width()?, self.height()?))
 	}
 
+	/// Takes two `Rectangle`s and calculates the ratio between the area of their intersection and
+	/// the area of their union
 	pub fn intersection_over_union(&self, other: &Self) -> Option<f32> {
 		if self.min.x > other.max.x {
 			return Some(0.0);

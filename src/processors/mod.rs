@@ -9,6 +9,7 @@ use std::sync::{
 	Arc, Mutex,
 };
 
+/// Starts the processing loop
 pub fn start(
 	frame: &Arc<Mutex<Option<Frame>>>,
 	faces_for_gui: &Arc<Mutex<Vec<FaceForGUI>>>,

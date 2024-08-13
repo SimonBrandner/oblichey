@@ -10,6 +10,7 @@ const SIMILARITY_THRESHOLD: f32 = 0.51;
 const SCAN_SAMPLE_COUNT: usize = 16;
 
 pub trait FaceProcessor: Debug {
+	/// Processes faces found by `FrameProcessor`
 	fn process_faces(&mut self, detected_faces: Vec<FaceForProcessing>) -> Vec<FaceForGUI>;
 	fn is_finished(&self) -> bool;
 }

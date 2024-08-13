@@ -12,8 +12,10 @@ pub enum FaceRecognitionError {
 	TooSmall,
 }
 
+/// This is the face embedding data itself
 pub type FaceEmbeddingData = [f32; EMBEDDING_LENGTH];
 
+/// This is a struct for working with the face embedding. It supports several useful operations
 #[serde_as]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FaceEmbedding {
@@ -88,11 +90,15 @@ impl FaceEmbedding {
 	}
 }
 
+/// This is the data produced by the recognition model and in the future by other models (such as
+/// those for liveness detection)
 #[derive(Debug, Clone, Copy)]
 pub struct FaceRecognitionData {
 	pub embedding: FaceEmbedding,
 }
 
+/// This is a struct that fully describes a face in a frame with its location, size and the
+/// recognition data
 #[derive(Debug, Clone)]
 pub struct FaceForProcessing {
 	pub rectangle: Rectangle<u32>,
@@ -115,6 +121,7 @@ pub enum FaceForGUIAnnotation {
 	},
 }
 
+/// Face for displaying in the GUI
 #[derive(Debug, Clone)]
 pub struct FaceForGUI {
 	pub rectangle: Rectangle<u32>,

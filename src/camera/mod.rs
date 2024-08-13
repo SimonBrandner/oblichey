@@ -22,6 +22,7 @@ const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
 /// How many times we are allowed to fail getting a frame before we panic
 const MAX_FAILED_FRAMES_IN_ROW: u8 = 10;
 
+/// The type of a frame coming from the camera
 pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
 #[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq)]
@@ -75,6 +76,9 @@ pub struct Camera<'a> {
 }
 
 impl<'a> Camera<'a> {
+	/// Creates a new Camera which can be used to get frames from the given device.
+	///
+	/// This is going to panic if a supported output pixel format cannot be found
 	pub fn new() -> Result<Self, Error> {
 		let device = Device::with_path(CAMERA_PATH)?;
 		let mut format = device.format()?;
@@ -121,6 +125,7 @@ impl<'a> Camera<'a> {
 	}
 }
 
+/// Starts the camera loop
 pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 	let mut camera = match Camera::new() {
 		Ok(c) => c,

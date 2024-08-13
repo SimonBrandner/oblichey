@@ -17,6 +17,8 @@ pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
 /// The size of the image the recognizer model takes as input
 pub const RECOGNIZER_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 128, y: 128 };
 
+/// Checks whether a `Rectangle` is large enough to be passed into the recognizer model. We would
+/// not want to pass an upscaled image to it
 fn rectangle_large_enough_for_recognition(rectangle: &Rectangle<u32>) -> bool {
 	let size = rectangle
 		.size()
@@ -70,6 +72,9 @@ impl FrameProcessor {
 		}
 	}
 
+	/// Process a frame from the `Camera` and return found faces
+	///
+	/// This is going to panic if the frame has a size other than `DETECTOR_INPUT_SIZE`
 	pub fn process_frame(&self, frame: &Frame) -> Vec<FaceForProcessing> {
 		assert_eq!(
 			frame.width(),
