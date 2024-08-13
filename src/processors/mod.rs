@@ -27,9 +27,8 @@ pub fn start(
 			Ok(l) => l,
 			Err(e) => panic!("Failed to get frame lock: {e}"),
 		};
-		let new_frame = match frame_lock.clone() {
-			Some(f) => f.clone(),
-			None => continue,
+		let Some(new_frame) = (*frame_lock).clone() else {
+			continue;
 		};
 		drop(frame_lock);
 

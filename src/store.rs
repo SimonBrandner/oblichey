@@ -18,7 +18,7 @@ fn get_face_embedding_file_path(name: &str) -> PathBuf {
 pub fn save_face_embedding(name: &str, face_embedding: &FaceEmbedding) {
 	let path = get_face_embedding_file_path(name);
 	let serialized: Vec<u8> = serialize(&face_embedding).expect("Failed to serialize!");
-	fs::write(&path, serialized).expect("Failed to write embedding!");
+	fs::write(path, serialized).expect("Failed to write embedding!");
 }
 
 pub fn remove_face_embedding(name: &str) {
