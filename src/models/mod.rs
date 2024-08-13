@@ -1,3 +1,7 @@
+#![allow(clippy::all)]
+#![allow(clippy::nursery)]
+#![allow(clippy::pedantic)]
+
 pub mod detector {
 	include!(concat!(env!("OUT_DIR"), "/src/models/detector.rs"));
 }
