@@ -8,7 +8,6 @@ mod store;
 use crate::store::{load_face_embeddings, remove_face_embedding};
 use camera::Frame;
 use clap::Parser;
-use core::panic;
 use processors::face::FaceForGUI;
 use processors::face_processor::{AuthProcessor, FaceProcessor, ScanProcessor};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -59,7 +58,7 @@ fn main() {
 
 			let auth_processor_lock = match auth_processor.lock() {
 				Ok(l) => l,
-				Err(e) => panic!("{}", e),
+				Err(e) => panic!("Failed to get lock: {e}"),
 			};
 			let Some(result) = auth_processor_lock.get_result() else {
 				unreachable!()
@@ -82,10 +81,10 @@ fn main() {
 			start_threads(scan_processor.clone(), true);
 			let scan_processor_lock = match scan_processor.lock() {
 				Ok(l) => l,
-				Err(e) => panic!("{}", e),
+				Err(e) => panic!("Failed to get lock: {e}"),
 			};
 			let Some(result) = scan_processor_lock.get_result() else {
-				panic!("Scanning ended with no result!")
+				unreachable!();
 			};
 
 			drop(scan_processor_lock);

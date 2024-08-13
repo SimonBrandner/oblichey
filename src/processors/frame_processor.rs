@@ -74,12 +74,12 @@ impl FrameProcessor {
 		assert_eq!(
 			frame.width(),
 			DETECTOR_INPUT_SIZE.x,
-			"Image width does not match network requirements!"
+			"Image width does not match model requirements!"
 		);
 		assert_eq!(
 			frame.height(),
 			DETECTOR_INPUT_SIZE.y,
-			"Image height does not match network requirements!"
+			"Image height does not match model requirements!"
 		);
 
 		let detector_input = self.normalize_detector_input(frame);
@@ -160,8 +160,7 @@ impl FrameProcessor {
 			while j < face_rectangles.len() {
 				if face_rectangles[i]
 					.intersection_over_union(&face_rectangles[j])
-					.expect("Failed to calculate intersection over union")
-					> INTERSECTION_OVER_UNION_THRESHOLD
+					.map_or(false, |i| i > INTERSECTION_OVER_UNION_THRESHOLD)
 				{
 					face_rectangles.remove(j);
 					j -= 1;

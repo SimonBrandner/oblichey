@@ -177,7 +177,7 @@ impl eframe::App for Gui {
 
 		let frame_lock = match self.frame.lock() {
 			Ok(l) => l,
-			Err(e) => panic!("Failed to get frame lock: {e}"),
+			Err(e) => panic!("Failed to get lock: {e}"),
 		};
 		let Some(image) = frame_lock.clone() else {
 			ctx.request_repaint();
@@ -198,7 +198,7 @@ impl eframe::App for Gui {
 
 		let faces_for_gui_lock = match self.faces.lock() {
 			Ok(l) => l,
-			Err(e) => panic!("Failed to get detected faces lock: {e}"),
+			Err(e) => panic!("Failed to get lock: {e}"),
 		};
 		let faces_for_gui = faces_for_gui_lock.clone();
 		drop(faces_for_gui_lock);

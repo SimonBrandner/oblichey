@@ -1,6 +1,5 @@
 use crate::processors::face::FaceEmbedding;
 use bincode::{deserialize, serialize};
-use core::panic;
 use std::{
 	collections::HashMap,
 	fs::{self, read_dir, remove_file},

@@ -19,6 +19,8 @@ use v4l::{Device, FourCC};
 const CAMERA_PATH: &str = "/dev/video0";
 /// Some (at least mine) IR cameras occasionally produce very dark frames which we ignore
 const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
+/// How many times we are allowed to fail getting a frame before we panic
+const MAX_FAILED_FRAMES_IN_ROW: u8 = 10;
 
 pub type Frame = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
@@ -40,8 +42,8 @@ impl SupportedPixelFormat {
 
 pub enum Error {
 	Io(io::Error),
-	Format(String),
 	Image(ImageError),
+	CannotSetFormat,
 }
 
 impl From<io::Error> for Error {
@@ -60,7 +62,7 @@ impl Display for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Io(e) => write!(f, "IO error: {e}"),
-			Self::Format(e) => write!(f, "Format error: {e}"),
+			Self::CannotSetFormat => write!(f, "Failed to set desired format"),
 			Self::Image(e) => write!(f, "Image error: {e}"),
 		}
 	}
@@ -89,13 +91,12 @@ impl<'a> Camera<'a> {
 			}
 		}
 		let Some(pixel_format) = chosen_pixel_format else {
-			return Err(Error::Format(String::from(
-				"Failed to set the desired format",
-			)));
+			return Err(Error::CannotSetFormat);
 		};
 		#[cfg(not(feature = "rgb-webcam"))]
-		assert!(
-			pixel_format == SupportedPixelFormat::Gray,
+		assert_eq!(
+			pixel_format,
+			SupportedPixelFormat::Gray,
 			"Your camera does not appear to be support IR!"
 		);
 
@@ -128,6 +129,7 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 	let pixel_format = camera.get_pixel_format();
 	let frame_size = camera.get_frame_size();
 
+	let mut failed_frames_in_row = 0;
 	let mut last_brightness = 255.0;
 	loop {
 		if finished.load(Ordering::SeqCst) {
@@ -136,7 +138,14 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 
 		let new_frame = match camera.get_frame() {
 			Ok(f) => f,
-			Err(e) => panic!("Failed to get frame: {e}"),
+			Err(e) => {
+				failed_frames_in_row += 1;
+				assert!(
+					failed_frames_in_row < MAX_FAILED_FRAMES_IN_ROW,
+					"Failed to get {MAX_FAILED_FRAMES_IN_ROW} frames in row: {e}"
+				);
+				continue;
+			}
 		};
 
 		let rgb_frame = match pixel_format {
@@ -159,7 +168,7 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
 
 		let mut frame_lock = match frame.lock() {
 			Ok(l) => l,
-			Err(e) => panic!("Failed to get frame lock: {e}"),
+			Err(e) => panic!("Failed to get lock: {e}"),
 		};
 		*frame_lock = Some(reshaped_frame);
 		drop(frame_lock);
