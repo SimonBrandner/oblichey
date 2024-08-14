@@ -4,11 +4,15 @@
   clang,
   pkgs ? import <nixpkgs> {},
 }: let
-  cargoToml = builtins.fromTOML (builtins.readFile ../Cargo.toml);
+  cliCargoTomlPath = ../crates/gday-cli/Cargo.toml;
+  cliCargoTomlContent = builtins.fromTOML (builtins.readFile cliCargoTomlPath);
+  workspaceCargoTomlContent = builtins.fromTOML (builtins.readFile ../Cargo.toml);
 in
   rustPlatform.buildRustPackage rec {
-    inherit (cargoToml.package) version;
-    pname = cargoToml.package.name;
+    src = lib.cleanSource ../.;
+    cargoToml = cliCargoTomlPath;
+    version = workspaceCargoTomlContent.workspace.package.version;
+    pname = cliCargoTomlContent.package.name;
     cargoLock = {
       lockFile = ../Cargo.lock;
       outputHashes = {
@@ -16,7 +20,6 @@ in
         "cubecl-0.1.1" = "sha256-tLNC2KRRYrRRKL9HkhTYHg8tvxkJDm9fM8GrSQWNXeM=";
       };
     };
-    src = lib.cleanSource ../.;
     nativeBuildInputs = with pkgs; [
       clang
       fontconfig
@@ -44,7 +47,7 @@ in
     ];
     preInstall = ''
       mkdir -p $out/bin
-      cp -r target/release/weights $out/bin/weights
+      cp -r target/x86_64-unknown-linux-gnu/release/weights $out/bin/weights
     '';
     LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
     LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";

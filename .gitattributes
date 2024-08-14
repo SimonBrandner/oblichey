@@ -1,3 +1,5 @@
 models/detector.onnx filter=lfs diff=lfs merge=lfs -text
 models/recognizer.onnx filter=lfs diff=lfs merge=lfs -text
 models filter=lfs diff=lfs merge=lfs -text
+crates/gday-cli/models/detector.onnx filter=lfs diff=lfs merge=lfs -text
+crates/gday-cli/models/recognizer.onnx filter=lfs diff=lfs merge=lfs -text

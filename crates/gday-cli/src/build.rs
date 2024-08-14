@@ -2,6 +2,7 @@ use burn_import::onnx::ModelGen;
 use std::{
 	env,
 	fs::{self, create_dir},
+	io::ErrorKind,
 	path::Path,
 };
 
@@ -9,18 +10,33 @@ const MODEL_NAMES: [&str; 2] = ["detector", "recognizer"];
 const MODELS_OUT_DIR: &str = "src/models";
 const ONNX_DIR: &str = "models";
 const WEIGHTS_DIR: &str = "weights";
+const TARGET_DIR_ERROR: &str =
+	"Failed to get OUT_DIR parent when trying to get to target directory!";
 
 fn main() {
 	println!("cargo::rerun-if-changed=models");
 
-	let out_dir = env::var("OUT_DIR").expect("OUT_DIR not defined");
-	let profile = env::var("PROFILE").expect("PROFILE not defined");
+	let out_dir_str = env::var("OUT_DIR").expect("OUT_DIR not defined");
+	let out_dir_path = Path::new(&out_dir_str);
+	let target_dir_path = out_dir_path
+		.parent()
+		.expect(TARGET_DIR_ERROR)
+		.parent()
+		.expect(TARGET_DIR_ERROR)
+		.parent()
+		.expect(TARGET_DIR_ERROR);
 
-	let source_weights_dir = Path::new(&out_dir).join(MODELS_OUT_DIR);
-	let new_weights_dir = Path::new("target").join(profile).join(WEIGHTS_DIR);
+	let source_weights_dir = out_dir_path.join(MODELS_OUT_DIR);
+	let new_weights_dir = target_dir_path.join(WEIGHTS_DIR);
 
 	// Create the weights directory unless it already exists
-	let _ = create_dir(new_weights_dir.clone());
+	if let Err(e) = create_dir(new_weights_dir.clone()) {
+		assert_eq!(
+			e.kind(),
+			ErrorKind::AlreadyExists,
+			"Failed to create weights directory: {e}"
+		);
+	};
 
 	for model_name in MODEL_NAMES {
 		import_onnx_model(model_name);
