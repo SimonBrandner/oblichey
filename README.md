@@ -1,3 +1,3 @@
-# Gday 
+# Gday
 
-A Linux face authenitcation software built in Rust.
+A Linux face authentication software built in Rust.
