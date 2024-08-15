@@ -1,0 +1,14 @@
+[package]
+name = "gday-pam-module"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+pam-bindings = "0.1.1"
+
+[lints]
+workspace = true
+
+[lib]
+name = "pam_gday"
+crate-type = ["cdylib"]

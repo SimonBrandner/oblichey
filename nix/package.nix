@@ -1,17 +1,15 @@
 {
   lib,
-  rustPlatform,
   pkgs ? import <nixpkgs> {},
 }: let
-  cliCargoTomlPath = ../crates/gday-cli/Cargo.toml;
-  cliCargoTomlContent = builtins.fromTOML (builtins.readFile cliCargoTomlPath);
-  workspaceCargoTomlContent = builtins.fromTOML (builtins.readFile ../Cargo.toml);
+  cargoTomlPath = ../Cargo.toml;
+  cargoTomlContent = builtins.fromTOML (builtins.readFile cargoTomlPath);
 in
-  rustPlatform.buildRustPackage rec {
+  pkgs.rustPlatform.buildRustPackage rec {
+    pname = "gday";
+    version = cargoTomlContent.workspace.package.version;
     src = lib.cleanSource ../.;
-    cargoToml = cliCargoTomlPath;
-    version = workspaceCargoTomlContent.workspace.package.version;
-    pname = cliCargoTomlContent.package.name;
+    cargoToml = cargoTomlPath;
     cargoLock = {
       lockFile = ../Cargo.lock;
       outputHashes = {
@@ -43,6 +41,7 @@ in
       fontconfig
       vulkan-headers
       vulkan-loader
+      pam
     ];
     preInstall = ''
       mkdir -p $out/bin

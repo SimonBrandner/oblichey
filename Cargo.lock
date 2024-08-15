@@ -1856,6 +1856,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gday-pam-module"
+version = "0.0.1"
+dependencies = [
+ "pam-bindings",
+]
+
+[[package]]
 name = "gemm"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3283,6 +3290,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "490d3a563d3122bf7c911a59b0add9389e5ec0f5f0c3ac6b91ff235a0e6a7f90"
 dependencies = [
  "ttf-parser",
+]
+
+[[package]]
+name = "pam-bindings"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95c337e922acb6ab9c3ddd1016fed13957a5bf14f51b6caa293ddc8dd47660ca"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
