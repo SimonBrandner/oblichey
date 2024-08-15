@@ -3,7 +3,6 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-name = "gday"
 edition = "2021"
 version = "0.0.1"
 readme = "README.md"
