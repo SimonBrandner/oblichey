@@ -1,9 +1,11 @@
-name: "Check and build"
+name: "CI"
 on:
   pull_request:
   push:
+    branches:
+      - main
 jobs:
-  check-and-build:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
