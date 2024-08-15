@@ -1,7 +1,6 @@
 {
   lib,
   rustPlatform,
-  clang,
   pkgs ? import <nixpkgs> {},
 }: let
   cliCargoTomlPath = ../crates/gday-cli/Cargo.toml;
