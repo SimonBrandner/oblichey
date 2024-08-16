@@ -69,7 +69,7 @@ pub fn start(
 				.expect("Failed to convert Vec2D to Vec2!"),
 		);
 
-	let _ = eframe::run_native(
+	if let Err(e) = eframe::run_native(
 		"Gday",
 		NativeOptions {
 			viewport,
@@ -77,7 +77,9 @@ pub fn start(
 			..NativeOptions::default()
 		},
 		Box::new(|_| Ok(Box::new(Gui::new(frame, faces, finished)))),
-	);
+	) {
+		panic!("Running eframe failed: {e}");
+	};
 }
 
 struct Gui {
