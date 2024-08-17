@@ -18,11 +18,24 @@ use store::save_face_embedding;
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::Subcommand)]
 enum Command {
-	Scan { name: String },
-	Remove { name: String },
-	Auth,
-	Test,
+	/// Scan a new face
+	Scan {
+		/// Name of the newly scanned face
+		name: String,
+	},
+	/// Remove an existing scanned face
+	Remove {
+		/// Name of the scanned face to remove
+		name: String,
+	},
+	/// List scanned faces
 	List,
+	/// Opens a window with the camera's annotated output which can be used for testing if everything is
+	/// working as expected
+	Test,
+	/// This subcommand is mostly meant to be used by the PAM module. It authenticates the user.
+	/// It will return 0, if authentication was successful, and a non-zero error code, if it failed
+	Auth,
 }
 
 #[derive(clap::Parser, Debug)]
