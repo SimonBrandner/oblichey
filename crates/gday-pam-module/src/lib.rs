@@ -14,6 +14,9 @@ impl PamHooks for GdayPamModule {
 	fn sm_authenticate(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
 		println!("Starting face recognition");
 
+		// This is one of the ugliest things I have done recently and there really ought to be
+		// a way to do this other than calling another executable. Ideally, we would make the
+		// core code into some kind of a shared library.
 		match Command::new(EXECUTABLE_PATH).arg("auth").output() {
 			Ok(o) => {
 				if o.status.success() {
@@ -33,7 +36,6 @@ impl PamHooks for GdayPamModule {
 			}
 			Err(e) => {
 				println!("Running face recognition failed: {e}");
-
 				PamResultCode::PAM_AUTH_ERR
 			}
 		}
