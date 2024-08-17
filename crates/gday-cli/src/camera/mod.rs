@@ -15,8 +15,6 @@ use v4l::io::traits::CaptureStream;
 use v4l::video::Capture;
 use v4l::{Device, FourCC};
 
-// TODO: Make this user configurable
-const CAMERA_PATH: &str = "/dev/video0";
 /// Some (at least mine) IR cameras occasionally produce very dark frames which we ignore
 const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
 /// How many times we are allowed to fail getting a frame before we panic
@@ -79,8 +77,8 @@ impl<'a> Camera<'a> {
 	/// Creates a new Camera which can be used to get frames from the given device.
 	///
 	/// This is going to panic if a supported output pixel format cannot be found
-	pub fn new() -> Result<Self, Error> {
-		let device = Device::with_path(CAMERA_PATH)?;
+	pub fn new(camera_path: &str) -> Result<Self, Error> {
+		let device = Device::with_path(camera_path)?;
 		let mut format = device.format()?;
 		let frame_size = Vec2D::new(format.width, format.height);
 
@@ -126,8 +124,8 @@ impl<'a> Camera<'a> {
 }
 
 /// Starts the camera loop
-pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>) {
-	let mut camera = match Camera::new() {
+pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>, camera_path: &str) {
+	let mut camera = match Camera::new(camera_path) {
 		Ok(c) => c,
 		Err(e) => panic!("Failed construct camera: {e}"),
 	};

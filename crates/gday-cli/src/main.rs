@@ -1,4 +1,5 @@
 mod camera;
+mod config;
 mod geometry;
 mod gui;
 mod models;
@@ -7,6 +8,7 @@ mod store;
 
 use camera::Frame;
 use clap::Parser;
+use config::Config;
 use processors::face::FaceForGUI;
 use processors::face_processor::{AuthProcessor, FaceProcessor, ScanProcessor};
 use std::process::ExitCode;
@@ -46,6 +48,13 @@ struct Args {
 fn main() -> ExitCode {
 	let args = Args::parse();
 	let command = args.command;
+	let config = match Config::load() {
+		Ok(c) => c,
+		Err(e) => {
+			println!("Failed load config: {e}");
+			return ExitCode::FAILURE;
+		}
+	};
 
 	match command {
 		Command::Remove { name } => {
@@ -76,7 +85,7 @@ fn main() -> ExitCode {
 			};
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, true)));
 
-			start_threads(auth_processor, true);
+			start_threads(auth_processor, &config, true);
 		}
 		Command::Auth => {
 			let face_embeddings = match load_face_embeddings() {
@@ -92,7 +101,7 @@ fn main() -> ExitCode {
 			}
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, false)));
 
-			start_threads(auth_processor.clone(), false);
+			start_threads(auth_processor.clone(), &config, false);
 
 			let auth_processor_lock = match auth_processor.lock() {
 				Ok(l) => l,
@@ -123,7 +132,7 @@ fn main() -> ExitCode {
 			}
 
 			let scan_processor = Arc::new(Mutex::new(ScanProcessor::new()));
-			start_threads(scan_processor.clone(), true);
+			start_threads(scan_processor.clone(), &config, true);
 			let scan_processor_lock = match scan_processor.lock() {
 				Ok(l) => l,
 				Err(e) => panic!("Failed to get lock: {e}"),
@@ -146,14 +155,20 @@ fn main() -> ExitCode {
 
 /// This starts multiple threads for: reading from camera, processing frames and running the models
 /// on them and the GUI
-fn start_threads(face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>, gui: bool) {
+fn start_threads(
+	face_processor: Arc<Mutex<dyn FaceProcessor + Send + Sync>>,
+	config: &Config,
+	gui: bool,
+) {
 	let frame: Arc<Mutex<Option<Frame>>> = Arc::new(Mutex::new(None));
 	let faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>> = Arc::new(Mutex::new(Vec::new()));
 	let finished: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
 
 	let frame_clone = frame.clone();
 	let finished_clone = finished.clone();
-	let camera_thread = thread::spawn(move || camera::start(&frame_clone, &finished_clone));
+	let camera_path_clone = config.camera.path.clone();
+	let camera_thread =
+		thread::spawn(move || camera::start(&frame_clone, &finished_clone, &camera_path_clone));
 
 	let faces_for_gui_clone = faces_for_gui.clone();
 	let finished_clone = finished.clone();
