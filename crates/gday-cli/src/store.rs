@@ -2,52 +2,98 @@ use crate::processors::face::FaceEmbedding;
 use bincode::{deserialize, serialize};
 use std::{
 	collections::HashMap,
+	env,
+	fmt::Display,
 	fs::{self, read_dir, remove_file},
+	io,
 	path::PathBuf,
 };
 
-fn get_embeddings_directory() -> PathBuf {
-	PathBuf::from("/home/simon/Downloads/embeddings")
+const EMBEDDINGS_DIRECTORY: &str = "embeddings";
+
+#[derive(Debug)]
+pub enum Error {
+	EnvVar(env::VarError),
+	Io(io::Error),
+	Bincode(bincode::Error),
 }
 
-fn get_face_embedding_file_path(name: &str) -> PathBuf {
-	get_embeddings_directory().join(name)
+impl Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::EnvVar(e) => write!(f, "Environment variable error: {e}"),
+			Self::Io(e) => write!(f, "IO error: {e}"),
+			Self::Bincode(e) => write!(f, "Bincode error: {e}"),
+		}
+	}
 }
 
-pub fn save_face_embedding(name: &str, face_embedding: &FaceEmbedding) {
-	let path = get_face_embedding_file_path(name);
-	let serialized: Vec<u8> = serialize(&face_embedding).expect("Failed to serialize!");
-	fs::write(path, serialized).expect("Failed to write embedding!");
+impl From<env::VarError> for Error {
+	fn from(value: env::VarError) -> Self {
+		Self::EnvVar(value)
+	}
 }
 
-pub fn remove_face_embedding(name: &str) {
-	let path = get_face_embedding_file_path(name);
-	remove_file(path).expect("Failed to remove embedding file!");
+impl From<io::Error> for Error {
+	fn from(value: io::Error) -> Self {
+		Self::Io(value)
+	}
 }
 
-pub fn load_face_embeddings() -> HashMap<String, FaceEmbedding> {
-	let path = get_embeddings_directory();
-	let files = match read_dir(path) {
-		Ok(f) => f,
-		Err(e) => panic!("Failed to read directory: {e}"),
-	};
+impl From<bincode::Error> for Error {
+	fn from(value: bincode::Error) -> Self {
+		Self::Bincode(value)
+	}
+}
+
+fn get_embeddings_directory() -> Result<PathBuf, Error> {
+	let state_dir = env::var("XDG_STATE_HOME")?;
+	let embeddings_dir_path = PathBuf::from(state_dir).join(EMBEDDINGS_DIRECTORY);
+
+	Ok(embeddings_dir_path)
+}
+
+fn get_face_embedding_file_path(name: &str) -> Result<PathBuf, Error> {
+	Ok(get_embeddings_directory()?.join(name))
+}
+
+pub fn save_face_embedding(name: &str, face_embedding: &FaceEmbedding) -> Result<(), Error> {
+	let path = get_face_embedding_file_path(name)?;
+	let serialized: Vec<u8> = serialize(&face_embedding)?;
+	fs::write(path, serialized)?;
+
+	Ok(())
+}
+
+pub fn remove_face_embedding(name: &str) -> Result<(), Error> {
+	let path = get_face_embedding_file_path(name)?;
+	remove_file(path)?;
+
+	Ok(())
+}
+
+pub fn load_face_embeddings() -> Result<HashMap<String, FaceEmbedding>, Error> {
+	let path = get_embeddings_directory()?;
+	let files = read_dir(path)?;
 
 	let mut face_embeddings = HashMap::new();
 	for file in files {
 		let file = match file {
 			Ok(f) => f,
-			Err(e) => panic!("Failed to get file: {e}"),
+			Err(e) => {
+				println!("Failed to get file - skipping: {e}");
+				continue;
+			}
 		};
-		let serialized = fs::read(file.path()).expect("Failed to read embedding file!");
-		let face_embedding =
-			deserialize(&serialized).expect("Failed to deserialize embedding file!");
-		face_embeddings.insert(
-			file.file_name()
-				.to_str()
-				.expect("Failed to convert embedding file name to String!")
-				.to_owned(),
-			face_embedding,
-		);
+		let Ok(name) = file.file_name().into_string() else {
+			println!("File name contains invalid unicode - skipping");
+			continue;
+		};
+		let serialized = fs::read(file.path())?;
+		let face_embedding = deserialize(&serialized)?;
+
+		face_embeddings.insert(name, face_embedding);
 	}
-	face_embeddings
+
+	Ok(face_embeddings)
 }

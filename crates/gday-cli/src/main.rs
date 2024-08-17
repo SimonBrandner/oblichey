@@ -5,7 +5,6 @@ mod models;
 mod processors;
 mod store;
 
-use crate::store::{load_face_embeddings, remove_face_embedding};
 use camera::Frame;
 use clap::Parser;
 use processors::face::FaceForGUI;
@@ -14,7 +13,7 @@ use std::process::ExitCode;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
-use store::save_face_embedding;
+use store::{load_face_embeddings, remove_face_embedding, save_face_embedding};
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::Subcommand)]
 enum Command {
@@ -50,22 +49,47 @@ fn main() -> ExitCode {
 
 	match command {
 		Command::Remove { name } => {
-			remove_face_embedding(&name);
+			if let Err(e) = remove_face_embedding(&name) {
+				println!("Failed remove face scan: {e}");
+				return ExitCode::FAILURE;
+			}
 		}
 		Command::List => {
-			let face_embeddings = load_face_embeddings();
+			let face_embeddings = match load_face_embeddings() {
+				Ok(e) => e,
+				Err(e) => {
+					println!("Failed to load face scans: {e}");
+					return ExitCode::FAILURE;
+				}
+			};
 			for (name, _) in face_embeddings {
 				println!("{name}",);
 			}
 		}
 		Command::Test => {
-			let face_embeddings = load_face_embeddings();
+			let face_embeddings = match load_face_embeddings() {
+				Ok(e) => e,
+				Err(e) => {
+					println!("Failed to load face scans: {e}");
+					return ExitCode::FAILURE;
+				}
+			};
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, true)));
 
 			start_threads(auth_processor, true);
 		}
 		Command::Auth => {
-			let face_embeddings = load_face_embeddings();
+			let face_embeddings = match load_face_embeddings() {
+				Ok(e) => e,
+				Err(e) => {
+					println!("Failed to load face scans: {e}");
+					return ExitCode::FAILURE;
+				}
+			};
+			if face_embeddings.is_empty() {
+				println!("No faces have been scanned yet");
+				return ExitCode::FAILURE;
+			}
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, false)));
 
 			start_threads(auth_processor.clone(), false);
@@ -86,7 +110,13 @@ fn main() -> ExitCode {
 			}
 		}
 		Command::Scan { name } => {
-			let face_embeddings = load_face_embeddings();
+			let face_embeddings = match load_face_embeddings() {
+				Ok(e) => e,
+				Err(e) => {
+					println!("Failed to load face scans: {e}");
+					return ExitCode::FAILURE;
+				}
+			};
 			if face_embeddings.contains_key(&name) {
 				println!("Face of this name already exists. Either pick a different name or remove the existing face.");
 				return ExitCode::FAILURE;
@@ -103,7 +133,10 @@ fn main() -> ExitCode {
 			};
 
 			drop(scan_processor_lock);
-			save_face_embedding(&name, &result.face_embedding);
+			if let Err(e) = save_face_embedding(&name, &result.face_embedding) {
+				println!("Failed to save face scan: {e}");
+				return ExitCode::FAILURE;
+			};
 			println!("Face scan was successful!");
 		}
 	}
