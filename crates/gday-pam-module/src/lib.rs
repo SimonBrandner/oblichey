@@ -20,8 +20,6 @@ impl PamHooks for GdayPamModule {
 					println!("Face recognition successful");
 					PamResultCode::PAM_SUCCESS
 				} else {
-					println!("Face recognition unsuccessful");
-
 					if let Err(e) = io::stdout().write_all(&o.stdout) {
 						println!("Failed to print stdout: {e}");
 					};
@@ -29,6 +27,7 @@ impl PamHooks for GdayPamModule {
 						println!("Failed to print stderr: {e}");
 					};
 
+					println!("Face recognition unsuccessful");
 					PamResultCode::PAM_AUTH_ERR
 				}
 			}
