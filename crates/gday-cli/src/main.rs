@@ -10,6 +10,7 @@ use camera::Frame;
 use clap::Parser;
 use processors::face::FaceForGUI;
 use processors::face_processor::{AuthProcessor, FaceProcessor, ScanProcessor};
+use std::process::ExitCode;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
@@ -30,7 +31,7 @@ struct Args {
 	command: Command,
 }
 
-fn main() {
+fn main() -> ExitCode {
 	let args = Args::parse();
 	let command = args.command;
 
@@ -61,20 +62,21 @@ fn main() {
 				Err(e) => panic!("Failed to get lock: {e}"),
 			};
 			let Some(result) = auth_processor_lock.get_result() else {
-				unreachable!()
+				panic!("Getting auth result failed - this should never happen!")
 			};
 			drop(auth_processor_lock);
 			if result.authenticated {
 				println!("Authenticated!");
 			} else {
 				println!("Authentication failed!");
+				return ExitCode::FAILURE;
 			}
 		}
 		Command::Scan { name } => {
 			let face_embeddings = load_face_embeddings();
 			if face_embeddings.contains_key(&name) {
 				println!("Face of this name already exists. Either pick a different name or remove the existing face.");
-				return;
+				return ExitCode::FAILURE;
 			}
 
 			let scan_processor = Arc::new(Mutex::new(ScanProcessor::new()));
@@ -84,7 +86,7 @@ fn main() {
 				Err(e) => panic!("Failed to get lock: {e}"),
 			};
 			let Some(result) = scan_processor_lock.get_result() else {
-				unreachable!();
+				panic!("Getting auth result failed - this should never happen!")
 			};
 
 			drop(scan_processor_lock);
@@ -92,6 +94,8 @@ fn main() {
 			println!("Face scan was successful!");
 		}
 	}
+
+	ExitCode::SUCCESS
 }
 
 /// This starts multiple threads for: reading from camera, processing frames and running the models
