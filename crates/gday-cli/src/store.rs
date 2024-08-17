@@ -7,7 +7,7 @@ use std::{
 };
 
 fn get_embeddings_directory() -> PathBuf {
-	PathBuf::from("./embeddings")
+	PathBuf::from("/home/simon/Downloads/embeddings")
 }
 
 fn get_face_embedding_file_path(name: &str) -> PathBuf {
