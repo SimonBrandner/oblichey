@@ -5,7 +5,7 @@ use super::{
 use crate::processors::face::{FaceForGUIAnnotation, FaceRecognitionError};
 use std::{collections::HashMap, fmt::Debug, time::Instant};
 
-const AUTH_TIMEOUT: u64 = 15; // In seconds
+const AUTH_TIMEOUT: u64 = 10; // In seconds
 const SIMILARITY_THRESHOLD: f32 = 0.51;
 const SCAN_SAMPLE_COUNT: usize = 16;
 
