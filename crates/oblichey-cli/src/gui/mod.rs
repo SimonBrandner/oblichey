@@ -70,7 +70,7 @@ pub fn start(
 		);
 
 	if let Err(e) = eframe::run_native(
-		"Gday",
+		"Oblichey",
 		NativeOptions {
 			viewport,
 			event_loop_builder,

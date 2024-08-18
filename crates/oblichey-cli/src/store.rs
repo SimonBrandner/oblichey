@@ -9,7 +9,7 @@ use std::{
 	path::PathBuf,
 };
 
-const EMBEDDINGS_DIRECTORY: &str = "embeddings";
+const EMBEDDINGS_DIRECTORY: &str = "oblichey";
 
 #[derive(Debug)]
 pub enum Error {

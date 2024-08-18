@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::{fmt::Display, fs, io};
 
-const CONFIG_PATH: &str = "/etc/gday.toml";
+const CONFIG_PATH: &str = "/etc/oblichey.toml";
 
 pub enum Error {
 	TomlDeserialize(toml::de::Error),

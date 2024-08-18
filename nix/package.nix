@@ -6,7 +6,7 @@
   cargoTomlContent = builtins.fromTOML (builtins.readFile cargoTomlPath);
 in
   pkgs.rustPlatform.buildRustPackage rec {
-    pname = "gday";
+    pname = "oblichey";
     version = cargoTomlContent.workspace.package.version;
     src = lib.cleanSource ../.;
     cargoToml = cargoTomlPath;
@@ -48,7 +48,7 @@ in
       cp -r target/x86_64-unknown-linux-gnu/release/weights $out/bin/weights
     '';
     postFixup = ''
-      patchelf --add-rpath ${with pkgs; lib.makeLibraryPath [libGL libxkbcommon wayland vulkan-loader vulkan-headers]}/lib $out/bin/gday-cli
+      patchelf --add-rpath ${with pkgs; lib.makeLibraryPath [libGL libxkbcommon wayland vulkan-loader vulkan-headers]}/lib $out/bin/oblichey-cli
     '';
     LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
     LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";

@@ -1,5 +1,5 @@
 [package]
-name = "gday-cli"
+name = "oblichey-cli"
 build = "src/build.rs"
 version.workspace = true
 edition.workspace = true

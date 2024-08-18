@@ -4,13 +4,13 @@ use std::ffi::CStr;
 use std::io::{self, Write};
 use std::process::Command;
 
-const EXECUTABLE_PATH: &str = "/home/simon/GIT/Rust/gday/result/bin/gday-cli";
+const EXECUTABLE_PATH: &str = "/home/simon/GIT/Rust/oblichey/result/bin/oblichey-cli";
 
-struct GdayPamModule;
+struct OblicheyPamModule;
 
-pam::pam_hooks!(GdayPamModule);
+pam::pam_hooks!(OblicheyPamModule);
 
-impl PamHooks for GdayPamModule {
+impl PamHooks for OblicheyPamModule {
 	fn sm_authenticate(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
 		println!("Starting face recognition");
 

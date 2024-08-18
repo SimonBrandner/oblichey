@@ -1,2 +1,4 @@
 crates/gday-cli/models/detector.onnx filter=lfs diff=lfs merge=lfs -text
 crates/gday-cli/models/recognizer.onnx filter=lfs diff=lfs merge=lfs -text
+crates/oblichey-cli/models/detector.onnx filter=lfs diff=lfs merge=lfs -text
+crates/oblichey-cli/models/recognizer.onnx filter=lfs diff=lfs merge=lfs -text

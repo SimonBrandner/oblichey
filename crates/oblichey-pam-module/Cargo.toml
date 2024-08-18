@@ -1,5 +1,5 @@
 [package]
-name = "gday-pam-module"
+name = "oblichey-pam-module"
 edition.workspace = true
 version.workspace = true
 
@@ -10,5 +10,5 @@ pam-bindings = "0.1.1"
 workspace = true
 
 [lib]
-name = "pam_gday"
+name = "pam_oblichey"
 crate-type = ["cdylib"]
