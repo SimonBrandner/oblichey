@@ -4,7 +4,7 @@ use std::{
 	collections::HashMap,
 	env,
 	fmt::Display,
-	fs::{self, read_dir, remove_file},
+	fs::{self, create_dir, read_dir, remove_file},
 	io,
 	path::PathBuf,
 };
@@ -49,6 +49,12 @@ impl From<bincode::Error> for Error {
 fn get_embeddings_directory() -> Result<PathBuf, Error> {
 	let state_dir = env::var("XDG_STATE_HOME")?;
 	let embeddings_dir_path = PathBuf::from(state_dir).join(EMBEDDINGS_DIRECTORY);
+
+	if let Err(e) = create_dir(embeddings_dir_path.clone()) {
+		if e.kind() != io::ErrorKind::AlreadyExists {
+			return Err(Error::from(e));
+		}
+	};
 
 	Ok(embeddings_dir_path)
 }
