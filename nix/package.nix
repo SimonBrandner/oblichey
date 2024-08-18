@@ -1,6 +1,6 @@
 {
   lib,
-  pkgs ? import <nixpkgs> {},
+  pkgs,
 }: let
   cargoTomlPath = ../Cargo.toml;
   cargoTomlContent = builtins.fromTOML (builtins.readFile cargoTomlPath);

@@ -4,7 +4,7 @@ use std::ffi::CStr;
 use std::io::{self, Write};
 use std::process::Command;
 
-const EXECUTABLE_PATH: &str = "/home/simon/GIT/Rust/oblichey/result/bin/oblichey-cli";
+const EXECUTABLE_PATH: &str = "oblichey-cli";
 
 struct OblicheyPamModule;
 
