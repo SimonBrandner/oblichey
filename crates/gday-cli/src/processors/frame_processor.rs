@@ -10,7 +10,6 @@ use burn::tensor::{Tensor, TensorData};
 use image::imageops::{crop, resize, FilterType};
 
 const WEIGHTS_DIRECTORY_NAME: &str = "weights";
-const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
 const CONFIDENCE_THRESHOLD: f32 = 0.95;
 /// The size of the image the detector model takes as input
 pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
@@ -158,22 +157,7 @@ impl FrameProcessor {
 			});
 		}
 
-		// Filter out colliding face rectangles
-		let mut i = 0;
-		while i < face_rectangles.len() {
-			let mut j = i + 1;
-			while j < face_rectangles.len() {
-				if face_rectangles[i]
-					.intersection_over_union(&face_rectangles[j])
-					.map_or(false, |i| i > INTERSECTION_OVER_UNION_THRESHOLD)
-				{
-					face_rectangles.remove(j);
-					j -= 1;
-				}
-				j += 1;
-			}
-			i += 1;
-		}
+		Rectangle::filter_out_colliding(&mut face_rectangles);
 
 		face_rectangles
 	}

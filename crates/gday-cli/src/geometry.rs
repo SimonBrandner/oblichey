@@ -4,6 +4,8 @@ use std::{
 	ops::{Add, Mul, Neg, Sub},
 };
 
+const INTERSECTION_OVER_UNION_THRESHOLD: f32 = 0.5;
+
 pub trait Vec2DNumber
 where
 	Self: NumCast
@@ -156,5 +158,23 @@ impl<T: Vec2DNumber> Rectangle<T> {
 		}
 
 		Some(<f32 as NumCast>::from(intersection_area)? / union_area)
+	}
+
+	pub fn filter_out_colliding(rectangles: &mut Vec<Self>) {
+		let mut i = 0;
+		while i < rectangles.len() {
+			let mut j = i + 1;
+			while j < rectangles.len() {
+				if rectangles[i]
+					.intersection_over_union(&rectangles[j])
+					.map_or(false, |i| i > INTERSECTION_OVER_UNION_THRESHOLD)
+				{
+					rectangles.remove(j);
+					j -= 1;
+				}
+				j += 1;
+			}
+			i += 1;
+		}
 	}
 }
