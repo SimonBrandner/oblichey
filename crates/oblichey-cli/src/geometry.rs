@@ -160,6 +160,8 @@ impl<T: Vec2DNumber> Rectangle<T> {
 		Some(<f32 as NumCast>::from(intersection_area)? / union_area)
 	}
 
+	/// When multiple `Rectangle`s are stacked on top of each other, this function reduces them to
+	/// just one
 	pub fn filter_out_colliding(rectangles: &mut Vec<Self>) {
 		let mut i = 0;
 		while i < rectangles.len() {
