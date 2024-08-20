@@ -119,3 +119,4 @@ like _oblichey_ when said aloud) meaning _face_.
 - [FaceONNX: a set of deep neural networks for face recognition and analytics](https://github.com/FaceONNX/FaceONNX)
 - [`egui`: an easy-to-use GUI in pure Rust](https://github.com/emilk/egui)
 - [`pam-rs`: Rust binding for PAM](https://github.com/anowell/pam-rs)
+- [`libv4l-rs`: Rust bindings for `v4l`](https://github.com/raymanfx/libv4l-rs)
