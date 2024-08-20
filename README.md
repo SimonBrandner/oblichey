@@ -74,7 +74,8 @@ flakes](https://nixos.wiki/wiki/Flakes#Enable_flakes_permanently_in_NixOS).
 Since the neural network models we are using are quite large, you're going to
 need to get [Git LFS](https://git-lfs.com/) too.
 
-Once you have those installed you can run the following commands.
+Once you have those installed, you can clone the repo and enter the Nix
+development environment.
 
 ```sh
 git clone https://github.com/SimonBrandner/oblichey/
@@ -88,7 +89,14 @@ Now you can compile both `oblichey-cli` and `oblichey-pam-module` like so.
 cargo build --release
 ```
 
-The binary and library files can be found in the `target` directory.
+The binary and library files can be found in the `target` directory. You can also use `cargo run --release -p oblichey-cli` to build and run the cli.
+
+To avoid having to type `nix develop` manually every time, you can use
+[direnv](https://github.com/direnv/direnv/tree/master).
+
+```sh
+cp .envrc.sample .envrc
+```
 
 ### Notes
 
