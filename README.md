@@ -8,8 +8,8 @@ A facial authentication software for Linux built in Rust inspired by
 - You need a device with an infrared (IR) webcam.
 - At the very least until https://github.com/SimonBrandner/oblichey/issues/6 is
   solved, this can be fooled with a printed photo.
-- I am relatively new to Rust, Nix and PAM development, so you this at your own
-  risk while this is in early stages of development.
+- I am relatively new to Rust, Nix and PAM development, so use this at your own
+  risk while it is in early stages of development.
 - I am a student, and so my availability is somewhat limited depending on the
   time of year etc.
 - Contributions are welcome!
@@ -59,22 +59,29 @@ Add an `oblichey` entry to `programs`:
 
 ### Other
 
-Currently, Nix is the only supported packaging format but it should possibly to
-compile from source on non NixOS systems and install manually as well as using
-Nix to build and then install manually. I am relatively open to contributions
-for other packaging formats.
+Currently, NixOS is the only "officially" supported distribution, but it should
+be possible to compile from source either by using Nix or without it and
+installing manually. I am relatively open to contributions for other packaging
+formats.
+
+## Usage
+
+You can use `oblichey-cli help` to see the available commands. Everything
+should be straightforward - you scan a new face, (use the test feature to check
+everything is fine), and you are good to go.
 
 ## Development
 
 For development you are going to need Nix (the package manager not the OS)
-which is either part of you NixOS install or can be downloaded
+which is either part of your NixOS install or can be downloaded
 [here](https://nixos.org/download/#nix-install-linux) for other distros. You
 are going to need to [enable
 flakes](https://nixos.wiki/wiki/Flakes#Enable_flakes_permanently_in_NixOS).
 Since the neural network models we are using are quite large, you're going to
 need to get [Git LFS](https://git-lfs.com/) too.
 
-Once you have those installed you can run the following commands.
+Once you have those installed, you can clone the repo and enter the Nix
+development environment.
 
 ```sh
 git clone https://github.com/SimonBrandner/oblichey/
@@ -88,14 +95,22 @@ Now you can compile both `oblichey-cli` and `oblichey-pam-module` like so.
 cargo build --release
 ```
 
-The binary and library files can be found in the `target` directory.
+The binary and library files can be found in the `target` directory. You can
+also use `cargo run --release -p oblichey-cli` to build and run the cli.
+
+To avoid having to type `nix develop` manually every time, you can use
+[direnv](https://github.com/direnv/direnv/tree/master).
+
+```sh
+cp .envrc.sample .envrc
+```
 
 ### Notes
 
 - You need to compile with the `--release` flag, otherwise Oblichey is going to
   run super slow due to the neural network models not being optimized.
-- If you want to develop on a machine that does not have an IR camera you can do
-  so using by compiling with `--features "rgb-webcam"`. This is intended soly for
+- If you want to develop on a machine that does not have an IR camera, you can
+  do so by compiling with `--features "rgb-webcam"`. This is intended solely for
   development purposes.
 
 ## Etymology or where does the name come from?
@@ -111,3 +126,4 @@ like _oblichey_ when said aloud) meaning _face_.
 - [FaceONNX: a set of deep neural networks for face recognition and analytics](https://github.com/FaceONNX/FaceONNX)
 - [`egui`: an easy-to-use GUI in pure Rust](https://github.com/emilk/egui)
 - [`pam-rs`: Rust binding for PAM](https://github.com/anowell/pam-rs)
+- [`libv4l-rs`: Rust bindings for `v4l`](https://github.com/raymanfx/libv4l-rs)
