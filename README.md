@@ -64,6 +64,12 @@ be possible to compile from source either by using Nix or without it and
 installing manually. I am relatively open to contributions for other packaging
 formats.
 
+## Usage
+
+You can use `oblichey-cli help` to see the available commands. Everything
+should be straightforward - you scan a new face, (use the test feature to check
+everything is fine), and you are good to go.
+
 ## Development
 
 For development you are going to need Nix (the package manager not the OS)
