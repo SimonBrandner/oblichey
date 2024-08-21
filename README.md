@@ -1,7 +1,8 @@
 # Oblichey
 
 A facial authentication software for Linux built in Rust inspired by
-[Howdy](https://github.com/boltgolt/howdy/).
+[Howdy](https://github.com/boltgolt/howdy/). I would highly recommend reading
+about [how Oblichey works](/docs/how_does_it_work.md) before using it.
 
 ## Notes/disclaimers
 
