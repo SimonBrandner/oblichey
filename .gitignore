@@ -3,3 +3,4 @@ result
 *.pt
 .direnv/
 .envrc
+crates/oblichey-cli/models/

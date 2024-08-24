@@ -36,6 +36,8 @@ in
       vulkan-loader
 
       rustfmt
+
+      p7zip
     ];
     buildInputs = with pkgs; [
       fontconfig
@@ -43,6 +45,9 @@ in
       vulkan-loader
       pam
     ];
+    postUnpack = ''
+      ./source/scripts/unzip_models.sh
+    '';
     preInstall = ''
       mkdir -p $out/bin
       cp -r target/x86_64-unknown-linux-gnu/release/weights $out/bin/weights

@@ -18,6 +18,8 @@ pkgs.mkShell rec {
     vulkan-loader
 
     pam
+
+    p7zip
   ];
   LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
   LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";

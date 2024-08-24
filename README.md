@@ -78,16 +78,14 @@ which is either part of your NixOS install or can be downloaded
 [here](https://nixos.org/download/#nix-install-linux) for other distros. You
 are going to need to [enable
 flakes](https://nixos.wiki/wiki/Flakes#Enable_flakes_permanently_in_NixOS).
-Since the neural network models we are using are quite large, you're going to
-need to get [Git LFS](https://git-lfs.com/) too.
 
 Once you have those installed, you can clone the repo and enter the Nix
 development environment.
 
 ```sh
 git clone https://github.com/SimonBrandner/oblichey/
-git lfs pull
 nix develop
+./scripts/unzip_models.sh
 ```
 
 Now you can compile both `oblichey-cli` and `oblichey-pam-module` like so.

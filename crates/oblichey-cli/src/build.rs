@@ -1,4 +1,5 @@
 use burn_import::onnx::ModelGen;
+use merkle_hash::{bytes_to_hex, Algorithm, MerkleTree};
 use std::{
 	env,
 	fs::{self, create_dir},
@@ -9,12 +10,26 @@ use std::{
 const MODEL_NAMES: [&str; 2] = ["detector", "recognizer"];
 const MODELS_OUT_DIR: &str = "src/models";
 const ONNX_DIR: &str = "models";
+const ONNX_DIR_HASH: &str = "89bccae035e26f635866d12e0b5c030cfa2e7bf7a8889812043c0c08cf7e6126";
 const WEIGHTS_DIR: &str = "weights";
 const TARGET_DIR_ERROR: &str =
 	"Failed to get OUT_DIR parent when trying to get to target directory!";
+const TRY_UNZIPPING_MODELS: &str = "Try running `oblichey/scripts/unzip_models.sh`";
 
 fn main() {
-	println!("cargo::rerun-if-changed=models");
+	let tree = match MerkleTree::builder(ONNX_DIR)
+		.algorithm(Algorithm::Blake3)
+		.hash_names(false)
+		.build()
+	{
+		Ok(t) => t,
+		Err(e) => panic!("Failed to compute tree for directory hash. {TRY_UNZIPPING_MODELS}: {e}"),
+	};
+	assert_eq!(
+		bytes_to_hex(tree.root.item.hash),
+		ONNX_DIR_HASH,
+		"Directory hashes do not match. {TRY_UNZIPPING_MODELS}"
+	);
 
 	let out_dir_str = env::var("OUT_DIR").expect("OUT_DIR not defined");
 	let out_dir_path = Path::new(&out_dir_str);
