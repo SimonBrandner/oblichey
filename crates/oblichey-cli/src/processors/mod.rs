@@ -1,6 +1,8 @@
+pub mod auth_processor;
 pub mod face;
 pub mod face_processor;
 pub mod frame_processor;
+pub mod scan_processor;
 
 use self::{face::FaceForGUI, face_processor::FaceProcessor, frame_processor::FrameProcessor};
 use crate::camera::Frame;
