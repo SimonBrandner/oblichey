@@ -1,4 +1,4 @@
-use crate::{camera::Frame, geometry::Vec2D, processors::frame_processor::DETECTOR_INPUT_SIZE};
+use crate::{camera::Frame, geometry::Vec2D, models::detector::DETECTOR_INPUT_SIZE};
 use image::{
 	imageops::{crop, resize, FilterType},
 	ImageBuffer,

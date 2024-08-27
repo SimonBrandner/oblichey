@@ -8,7 +8,7 @@ use std::{
 };
 
 const MODEL_NAMES: [&str; 2] = ["detector", "recognizer"];
-const MODELS_OUT_DIR: &str = "src/models";
+const MODELS_OUT_DIR: &str = "src/models/imported";
 const ONNX_DIR: &str = "models";
 const ONNX_DIR_HASH: &str = "89bccae035e26f635866d12e0b5c030cfa2e7bf7a8889812043c0c08cf7e6126";
 const WEIGHTS_DIR: &str = "weights";

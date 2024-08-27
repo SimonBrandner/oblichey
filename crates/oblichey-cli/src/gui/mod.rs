@@ -7,10 +7,8 @@ use crate::{
 		geometry::{RectangleToEgui, Vec2DToEgui},
 		poi::draw_poi_square,
 	},
-	processors::{
-		face::{FaceForGUI, FaceForGUIAnnotation, FaceForGUIAnnotationWarning},
-		frame_processor::DETECTOR_INPUT_SIZE,
-	},
+	models::detector::DETECTOR_INPUT_SIZE,
+	processors::face::{FaceForGUI, FaceForGUIAnnotation, FaceForGUIAnnotationWarning},
 };
 use eframe::{
 	egui::{
