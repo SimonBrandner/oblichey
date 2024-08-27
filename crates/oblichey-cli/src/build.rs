@@ -17,6 +17,7 @@ const TARGET_DIR_ERROR: &str =
 const TRY_UNZIPPING_MODELS: &str = "Try running `oblichey/scripts/unzip_models.sh`";
 
 fn main() {
+	println!("cargo::rerun-if-changed=models");
 	let tree = match MerkleTree::builder(ONNX_DIR)
 		.algorithm(Algorithm::Blake3)
 		.hash_names(false)
