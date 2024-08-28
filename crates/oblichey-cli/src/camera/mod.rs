@@ -67,13 +67,13 @@ impl Display for Error {
 	}
 }
 
-pub struct Camera<'a> {
-	stream: Stream<'a>,
+pub struct Camera {
+	stream: Stream<'static>,
 	pixel_format: SupportedPixelFormat,
 	frame_size: Vec2D<u32>,
 }
 
-impl<'a> Camera<'a> {
+impl Camera {
 	/// Creates a new Camera which can be used to get frames from the given device.
 	///
 	/// This is going to panic if a supported output pixel format cannot be found
