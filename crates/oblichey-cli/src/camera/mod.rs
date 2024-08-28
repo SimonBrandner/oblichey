@@ -113,14 +113,6 @@ impl Camera {
 		let (frame_buffer, _) = self.stream.next()?;
 		Ok(frame_buffer.to_vec())
 	}
-
-	pub const fn get_pixel_format(&self) -> SupportedPixelFormat {
-		self.pixel_format
-	}
-
-	pub const fn get_frame_size(&self) -> Vec2D<u32> {
-		self.frame_size
-	}
 }
 
 /// Starts the camera loop
@@ -129,8 +121,6 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>, came
 		Ok(c) => c,
 		Err(e) => panic!("Failed construct camera: {e}"),
 	};
-	let pixel_format = camera.get_pixel_format();
-	let frame_size = camera.get_frame_size();
 
 	let mut failed_frames_in_row = 0;
 	let mut last_brightness = 255.0;
@@ -151,23 +141,23 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>, came
 			}
 		};
 
-		let rgb_frame = match pixel_format {
-			SupportedPixelFormat::Yuyv => convert_yuyv_to_rgb(&new_frame, frame_size),
+		let rgb_frame = match camera.pixel_format {
+			SupportedPixelFormat::Yuyv => convert_yuyv_to_rgb(&new_frame, camera.frame_size),
 			SupportedPixelFormat::Gray => {
 				// We need to ignore very dark frames in some way. It's difficult to pick a single
 				// threshold for "too dark", so we instead measure the brightness decrease
-				let brightness = brightness(&new_frame, frame_size);
+				let brightness = brightness(&new_frame, camera.frame_size);
 				let brightness_decrease = last_brightness - brightness;
 				last_brightness = brightness;
 				if brightness_decrease > MAX_BRIGHTNESS_DECREASE {
 					continue;
 				}
 
-				convert_grey_to_rgb(&new_frame, frame_size)
+				convert_grey_to_rgb(&new_frame, camera.frame_size)
 			}
 		};
 
-		let reshaped_frame = reshape_frame(&rgb_frame, frame_size);
+		let reshaped_frame = reshape_frame(&rgb_frame, camera.frame_size);
 
 		let mut frame_lock = match frame.lock() {
 			Ok(l) => l,
