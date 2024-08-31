@@ -76,7 +76,9 @@ impl FaceProcessor for ScanProcessor {
 		// function to give all samples the same weight
 		if !self.embedding_samples.is_empty() {
 			let average_embedding = FaceEmbedding::average_embedding(&self.embedding_samples);
-			let similarity = average_embedding.cosine_similarity(&embedding);
+			let similarity = average_embedding
+				.cosine_similarity(&embedding)
+				.expect("Similarity should never be None");
 
 			if similarity < SIMILARITY_THRESHOLD {
 				self.embedding_samples.clear();

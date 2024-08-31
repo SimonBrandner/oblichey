@@ -52,7 +52,10 @@ impl AuthProcessor {
 
 		let mut best_match: Option<(String, f32)> = None;
 		for (stored_face_embedding_name, stored_face_embedding) in &self.stored_face_embeddings {
-			let similarity = face_data.embedding.cosine_similarity(stored_face_embedding);
+			let similarity = face_data
+				.embedding
+				.cosine_similarity(stored_face_embedding)
+				.expect("Similarity should never be None");
 			if similarity < SIMILARITY_THRESHOLD {
 				continue;
 			}
