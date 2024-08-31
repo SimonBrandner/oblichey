@@ -17,4 +17,5 @@ jobs:
       - run: nix flake check
       - run: nix develop --command cargo fmt -- --check
       - run: nix develop --command cargo clippy
+      - run: nix develop --command cargo test
       - run: nix build
