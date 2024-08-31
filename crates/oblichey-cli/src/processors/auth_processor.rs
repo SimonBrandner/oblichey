@@ -1,5 +1,5 @@
 use super::{
-	face::{FaceEmbedding, FaceForGUIAnnotationWarning, FaceForProcessing},
+	face::{FaceEmbedding, FaceForGUIAnnotationWarning, FaceForProcessing, SIMILARITY_THRESHOLD},
 	face_processor::FaceProcessor,
 	FaceForGUI,
 };
@@ -7,7 +7,6 @@ use crate::processors::face::{FaceForGUIAnnotation, FaceRecognitionError};
 use std::{collections::HashMap, fmt::Debug, time::Instant};
 
 const AUTH_TIMEOUT: u64 = 10; // In seconds
-const SIMILARITY_THRESHOLD: f32 = 0.51;
 
 #[derive(Debug, Clone, Copy)]
 pub struct AuthProcessorResult {

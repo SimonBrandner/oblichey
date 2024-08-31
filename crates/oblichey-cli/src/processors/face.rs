@@ -5,6 +5,7 @@ use serde_with::serde_as;
 use std::ops::{AddAssign, Div};
 
 const EMBEDDING_LENGTH: usize = 512;
+pub const SIMILARITY_THRESHOLD: f32 = 0.51;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum FaceRecognitionError {

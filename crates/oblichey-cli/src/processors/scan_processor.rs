@@ -3,10 +3,9 @@ use super::{
 	face_processor::FaceProcessor,
 	FaceForGUI,
 };
-use crate::processors::face::{FaceForGUIAnnotation, FaceRecognitionError};
+use crate::processors::face::{FaceForGUIAnnotation, FaceRecognitionError, SIMILARITY_THRESHOLD};
 use std::fmt::Debug;
 
-const SIMILARITY_THRESHOLD: f32 = 0.51;
 const SCAN_SAMPLE_COUNT: usize = 16;
 
 #[derive(Debug, Clone)]
