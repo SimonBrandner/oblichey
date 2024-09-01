@@ -104,3 +104,140 @@ impl FaceProcessor for ScanProcessor {
 		}]
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::ScanProcessor;
+	use crate::{
+		geometry::{Rectangle, Vec2D},
+		processors::{
+			face::{
+				FaceEmbedding, FaceForGUIAnnotation, FaceForGUIAnnotationWarning,
+				FaceForProcessing, FaceRecognitionData, FaceRecognitionError, EMBEDDING_LENGTH,
+			},
+			face_processor::FaceProcessor,
+		},
+	};
+	use core::panic;
+
+	#[test]
+	fn handles_too_many_faces() {
+		let rectangle = Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0));
+		let mut processor = ScanProcessor::new();
+
+		let result = processor.process_faces(vec![
+			FaceForProcessing {
+				rectangle,
+				face_data: Ok(FaceRecognitionData {
+					embedding: FaceEmbedding::new(&[0.0; EMBEDDING_LENGTH]),
+				}),
+			},
+			FaceForProcessing {
+				rectangle,
+				face_data: Ok(FaceRecognitionData {
+					embedding: FaceEmbedding::new(&[0.0; EMBEDDING_LENGTH]),
+				}),
+			},
+		]);
+
+		assert_eq!(result.len(), 2);
+		for face in result {
+			if let FaceForGUIAnnotation::Warning(w) = face.annotation {
+				assert_eq!(w, FaceForGUIAnnotationWarning::TooManyFaces);
+			} else {
+				panic!()
+			}
+		}
+		assert!(processor.get_result().is_none());
+	}
+
+	#[test]
+	fn scans_face() {
+		let rectangle = Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0));
+		let embedding = FaceEmbedding::new(&[1.0; EMBEDDING_LENGTH]);
+		let faces = vec![FaceForProcessing {
+			rectangle,
+			face_data: Ok(FaceRecognitionData { embedding }),
+		}];
+		let mut processor = ScanProcessor::new();
+
+		let mut i = 1;
+		while !processor.is_finished() {
+			assert!(i <= 17);
+
+			let result = processor.process_faces(faces.clone());
+			assert_eq!(result.len(), 1);
+			if let FaceForGUIAnnotation::ScanningState {
+				scanned_sample_count,
+				required_sample_count: _,
+			} = result[0].annotation
+			{
+				assert_eq!(scanned_sample_count, i);
+			} else {
+				panic!();
+			}
+			i += 1;
+		}
+
+		let result = processor.get_result().expect("Failed to get result");
+		let similarity = result
+			.face_embedding
+			.cosine_similarity(&embedding)
+			.expect("Failed to calculate similarity");
+		assert!((similarity - 1.0).abs() <= f32::EPSILON);
+	}
+
+	#[test]
+	fn resets_scanning() {
+		let rectangle = Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0));
+		let face = FaceForProcessing {
+			rectangle,
+			face_data: Ok(FaceRecognitionData {
+				embedding: FaceEmbedding::new(&[1.0; EMBEDDING_LENGTH]),
+			}),
+		};
+		let mut processor = ScanProcessor::new();
+
+		// Different face
+		start_over_scanning(&mut processor);
+		processor.process_faces(vec![FaceForProcessing {
+			rectangle: Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0)),
+			face_data: Ok(FaceRecognitionData {
+				embedding: FaceEmbedding::new(&{
+					let mut embedding = [0.0; EMBEDDING_LENGTH];
+					embedding[0] = 1.0;
+					embedding
+				}),
+			}),
+		}]);
+		assert_eq!(processor.embedding_samples.len(), 0);
+
+		// Too many faces
+		start_over_scanning(&mut processor);
+		processor.process_faces(vec![face.clone(), face]);
+		assert_eq!(processor.embedding_samples.len(), 0);
+
+		// Too small
+		start_over_scanning(&mut processor);
+		processor.process_faces(vec![FaceForProcessing {
+			rectangle: Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0)),
+			face_data: Err(FaceRecognitionError::TooSmall),
+		}]);
+		assert_eq!(processor.embedding_samples.len(), 0);
+
+		// No face
+		start_over_scanning(&mut processor);
+		processor.process_faces(vec![]);
+		assert_eq!(processor.embedding_samples.len(), 0);
+	}
+
+	fn start_over_scanning(processor: &mut ScanProcessor) {
+		processor.process_faces(vec![FaceForProcessing {
+			rectangle: Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0)),
+			face_data: Ok(FaceRecognitionData {
+				embedding: FaceEmbedding::new(&[1.0; EMBEDDING_LENGTH]),
+			}),
+		}]);
+		assert_eq!(processor.embedding_samples.len(), 1);
+	}
+}
