@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::ops::{AddAssign, Div};
 
-const EMBEDDING_LENGTH: usize = 512;
+pub const EMBEDDING_LENGTH: usize = 512;
 pub const SIMILARITY_THRESHOLD: f32 = 0.51;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -111,7 +111,7 @@ pub struct FaceForProcessing {
 	pub face_data: Result<FaceRecognitionData, FaceRecognitionError>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FaceForGUIAnnotationWarning {
 	NotRecognized,
 	TooSmall,
