@@ -1,15 +1,15 @@
 use super::face::FaceForProcessing;
+#[double]
+use crate::models::detector::FaceDetector;
+#[double]
+use crate::models::recognizer::FaceRecognizer;
 use crate::{
-	camera::Frame,
-	geometry::Rectangle,
-	models::{
-		detector::FaceDetector,
-		recognizer::{FaceRecognizer, RECOGNIZER_INPUT_SIZE},
-	},
+	camera::Frame, geometry::Rectangle, models::recognizer::RECOGNIZER_INPUT_SIZE,
 	processors::face::FaceRecognitionError,
 };
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use image::imageops::{crop, resize, FilterType};
+use mockall_double::double;
 
 type Backend = Wgpu<f32, i32>;
 
@@ -83,5 +83,92 @@ impl FrameProcessor {
 		}
 
 		detected_faces
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use image::ImageBuffer;
+	use mockall::predicate::eq;
+
+	use crate::{
+		geometry::{Rectangle, Vec2D},
+		models::{
+			detector::MockFaceDetector,
+			recognizer::{MockFaceRecognizer, RECOGNIZER_INPUT_SIZE},
+		},
+		processors::face::{FaceEmbedding, FaceRecognitionData, FaceRecognitionError},
+	};
+
+	use super::{rectangle_large_enough_for_recognition, FrameProcessor};
+
+	#[test]
+	fn determines_if_rectangle_is_large_enough_for_recognition() {
+		let test_cases = vec![
+			(Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)), false),
+			(
+				Rectangle::new(Vec2D::new(0, 0), RECOGNIZER_INPUT_SIZE),
+				true,
+			),
+			(
+				Rectangle::new(RECOGNIZER_INPUT_SIZE, Vec2D::new(0, 0)),
+				true,
+			),
+			(
+				{
+					let min = Vec2D::new(10, 55);
+					Rectangle::new(Vec2D::new(0, 0), min + RECOGNIZER_INPUT_SIZE)
+				},
+				true,
+			),
+			(
+				{
+					let min = Vec2D::new(10, 55);
+					Rectangle::new(min + RECOGNIZER_INPUT_SIZE, Vec2D::new(0, 0))
+				},
+				true,
+			),
+		];
+
+		for (rectangle, expected_result) in test_cases {
+			let result = rectangle_large_enough_for_recognition(&rectangle);
+			assert_eq!(result, expected_result);
+		}
+	}
+
+	#[test]
+	fn processes_frame() {
+		let frame = ImageBuffer::from_vec(0, 0, vec![]).expect("Failed to create frame");
+		let mut detector = MockFaceDetector::default();
+		let mut recognizer = MockFaceRecognizer::default();
+
+		detector
+			.expect_forward()
+			.with(eq(frame.clone()))
+			.times(1)
+			.return_const(vec![
+				Rectangle::new(Vec2D::new(0, 0), Vec2D::new(10, 10)),
+				Rectangle::new(Vec2D::new(0, 0), RECOGNIZER_INPUT_SIZE),
+			]);
+		recognizer
+			.expect_forward()
+			.times(1)
+			.return_const(FaceRecognitionData {
+				embedding: FaceEmbedding::default(),
+			});
+
+		let result = FrameProcessor {
+			detector,
+			recognizer,
+		}
+		.process_frame(&frame);
+
+		assert_eq!(result.len(), 2);
+		if let Err(e) = result[0].face_data {
+			assert_eq!(e, FaceRecognitionError::TooSmall);
+		} else {
+			panic!();
+		}
+		assert!(result[1].face_data.is_ok());
 	}
 }
