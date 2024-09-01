@@ -46,7 +46,7 @@ impl FaceProcessor for ScanProcessor {
 				.map(|f| FaceForGUI {
 					rectangle: f.rectangle,
 					annotation: FaceForGUIAnnotation::Warning(
-						FaceForGUIAnnotationWarning::TooSmall,
+						FaceForGUIAnnotationWarning::TooManyFaces,
 					),
 				})
 				.collect();

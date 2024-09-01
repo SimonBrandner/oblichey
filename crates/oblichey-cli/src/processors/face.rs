@@ -115,6 +115,7 @@ pub struct FaceForProcessing {
 pub enum FaceForGUIAnnotationWarning {
 	NotRecognized,
 	TooSmall,
+	TooManyFaces,
 }
 
 #[derive(Clone, Debug)]
