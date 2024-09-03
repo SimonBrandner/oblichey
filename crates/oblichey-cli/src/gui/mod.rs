@@ -140,6 +140,9 @@ impl Gui {
 				FaceForGUIAnnotationWarning::NotRecognized => {
 					("Not recognized".to_owned(), FACE_RECTANGLE_GREY_COLOR)
 				}
+				FaceForGUIAnnotationWarning::TooManyFaces => {
+					("Too many faces".to_owned(), FACE_RECTANGLE_GREY_COLOR)
+				}
 			},
 			FaceForGUIAnnotation::ScanningState {
 				scanned_sample_count,

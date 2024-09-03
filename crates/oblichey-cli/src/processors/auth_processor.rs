@@ -1,5 +1,5 @@
 use super::{
-	face::{FaceEmbedding, FaceForGUIAnnotationWarning, FaceForProcessing},
+	face::{FaceEmbedding, FaceForGUIAnnotationWarning, FaceForProcessing, SIMILARITY_THRESHOLD},
 	face_processor::FaceProcessor,
 	FaceForGUI,
 };
@@ -7,7 +7,6 @@ use crate::processors::face::{FaceForGUIAnnotation, FaceRecognitionError};
 use std::{collections::HashMap, fmt::Debug, time::Instant};
 
 const AUTH_TIMEOUT: u64 = 10; // In seconds
-const SIMILARITY_THRESHOLD: f32 = 0.51;
 
 #[derive(Debug, Clone, Copy)]
 pub struct AuthProcessorResult {
@@ -53,7 +52,10 @@ impl AuthProcessor {
 
 		let mut best_match: Option<(String, f32)> = None;
 		for (stored_face_embedding_name, stored_face_embedding) in &self.stored_face_embeddings {
-			let similarity = face_data.embedding.cosine_similarity(stored_face_embedding);
+			let similarity = face_data
+				.embedding
+				.cosine_similarity(stored_face_embedding)
+				.expect("Similarity should never be None");
 			if similarity < SIMILARITY_THRESHOLD {
 				continue;
 			}
@@ -112,5 +114,124 @@ impl FaceProcessor for AuthProcessor {
 		}
 
 		processed_faces
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::AuthProcessor;
+	use crate::{
+		geometry::{Rectangle, Vec2D},
+		processors::{
+			face::{
+				FaceEmbedding, FaceForGUIAnnotation, FaceForGUIAnnotationWarning,
+				FaceForProcessing, FaceRecognitionData, FaceRecognitionError, EMBEDDING_LENGTH,
+			},
+			face_processor::FaceProcessor,
+		},
+	};
+	use core::panic;
+	use std::collections::HashMap;
+
+	#[test]
+	fn categorizes_faces() {
+		let rectangle = Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0));
+		let face_name = String::from("alice");
+		let embedding = FaceEmbedding::new(&{
+			let mut embedding = [0.0; EMBEDDING_LENGTH];
+			embedding[0] = 1.0;
+			embedding
+		});
+		let face_embeddings = {
+			let mut embeddings = HashMap::new();
+			embeddings.insert(face_name.clone(), embedding);
+			embeddings
+		};
+		let mut processor = AuthProcessor::new(face_embeddings, false);
+
+		let result = processor.process_faces(vec![
+			FaceForProcessing {
+				rectangle,
+				face_data: Err(FaceRecognitionError::TooSmall),
+			},
+			FaceForProcessing {
+				rectangle,
+				face_data: Ok(FaceRecognitionData {
+					embedding: FaceEmbedding::new(&[1.0; EMBEDDING_LENGTH]),
+				}),
+			},
+			FaceForProcessing {
+				rectangle,
+				face_data: Ok(FaceRecognitionData { embedding }),
+			},
+		]);
+
+		assert_eq!(result.len(), 3);
+		if let FaceForGUIAnnotation::Warning(warning) = &result[0].annotation {
+			assert_eq!(*warning, FaceForGUIAnnotationWarning::TooSmall);
+		} else {
+			panic!()
+		}
+		if let FaceForGUIAnnotation::Warning(warning) = &result[1].annotation {
+			assert_eq!(*warning, FaceForGUIAnnotationWarning::NotRecognized);
+		} else {
+			panic!()
+		}
+		if let FaceForGUIAnnotation::Name(name) = &result[2].annotation {
+			assert_eq!(*name, face_name);
+		} else {
+			panic!()
+		}
+		if let Some(result) = processor.get_result() {
+			assert!(result.authenticated);
+		} else {
+			panic!();
+		}
+	}
+
+	#[test]
+	fn picks_better_match() {
+		let rectangle = Rectangle::new(Vec2D::new(0, 0), Vec2D::new(0, 0));
+		let face_name = String::from("alice");
+		let correct_embedding_data = [1.0; EMBEDDING_LENGTH];
+		let correct_embedding = FaceEmbedding::new(&correct_embedding_data);
+		let incorrect_embedding_a = FaceEmbedding::new(&{
+			let mut embedding = correct_embedding_data;
+			embedding[0] = 0.0;
+			embedding
+		});
+		let incorrect_embedding_b = FaceEmbedding::new(&{
+			let mut embedding = correct_embedding_data;
+			embedding[255] = 0.0;
+			embedding
+		});
+
+		let face_embeddings = {
+			let mut embeddings = HashMap::new();
+			embeddings.insert(face_name.clone(), correct_embedding);
+			embeddings.insert(String::from("bob"), incorrect_embedding_a);
+			embeddings.insert(String::from("charlie"), incorrect_embedding_b);
+			embeddings
+		};
+		let mut processor = AuthProcessor::new(face_embeddings, false);
+
+		let result = processor.process_faces(vec![FaceForProcessing {
+			rectangle,
+			face_data: Ok(FaceRecognitionData {
+				embedding: correct_embedding,
+			}),
+		}]);
+
+		assert_eq!(result.len(), 1);
+		if let FaceForGUIAnnotation::Name(name) = &result[0].annotation {
+			assert_eq!(*name, face_name);
+		} else {
+			panic!()
+		}
+		if let Some(result) = processor.get_result() {
+			assert!(result.authenticated);
+		} else {
+			panic!();
+		}
 	}
 }

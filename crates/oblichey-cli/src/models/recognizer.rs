@@ -5,6 +5,8 @@ use crate::{
 	processors::face::{FaceEmbedding, FaceEmbeddingData, FaceRecognitionData},
 };
 use burn::tensor::{backend::Backend, Tensor, TensorData};
+#[cfg(test)]
+use mockall::automock;
 
 /// The size of the image the recognizer model takes as input
 pub const RECOGNIZER_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 128, y: 128 };
@@ -15,6 +17,8 @@ pub struct FaceRecognizer<B: Backend> {
 	model: Model<B>,
 }
 
+#[cfg_attr(test, automock)]
+#[cfg_attr(test, allow(unused))]
 impl<B: Backend> FaceRecognizer<B> {
 	pub fn new(device: &B::Device) -> Self {
 		Self {

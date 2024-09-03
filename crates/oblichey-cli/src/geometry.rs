@@ -1,4 +1,4 @@
-use num::{NumCast, Zero};
+use num::{NumCast, Unsigned, Zero};
 use std::{
 	fmt::Debug,
 	ops::{Add, Mul, Neg, Sub},
@@ -40,7 +40,7 @@ fn calculate_distance<T: Vec2DNumber>(min: T, max: T) -> Option<T> {
 	<T as NumCast>::from((max_f32 - min_f32).abs())
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Vec2D<T: Vec2DNumber> {
 	pub x: T,
 	pub y: T,
@@ -123,7 +123,9 @@ impl<T: Vec2DNumber> Rectangle<T> {
 	pub fn size(&self) -> Option<Vec2D<T>> {
 		Some(Vec2D::new(self.width()?, self.height()?))
 	}
+}
 
+impl<T: Vec2DNumber + Unsigned> Rectangle<T> {
 	/// Takes two `Rectangle`s and calculates the ratio between the area of their intersection and
 	/// the area of their union
 	pub fn intersection_over_union(&self, other: &Self) -> Option<f32> {
@@ -177,6 +179,93 @@ impl<T: Vec2DNumber> Rectangle<T> {
 				j += 1;
 			}
 			i += 1;
+		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::{Rectangle, Vec2D};
+	use core::f32;
+
+	#[test]
+	fn calculates_rectangle_size() {
+		let test_cases = vec![
+			(Vec2D::new(0, 0), Vec2D::new(1, 1), Vec2D::new(1, 1)),
+			(Vec2D::new(2, 3), Vec2D::new(3, 2), Vec2D::new(1, 1)),
+			(Vec2D::new(-5, -4), Vec2D::new(5, 4), Vec2D::new(10, 8)),
+			(Vec2D::new(-4, 3), Vec2D::new(4, 3), Vec2D::new(8, 0)),
+			(Vec2D::new(4, -3), Vec2D::new(-4, 3), Vec2D::new(8, 6)),
+		];
+
+		for (min, max, expected_size) in test_cases {
+			let rectangle = Rectangle::new(min, max);
+			let size = rectangle.size().expect("Failed to calculate size");
+
+			assert_eq!(size, expected_size);
+		}
+	}
+
+	#[test]
+	fn calculates_intersection_over_union() {
+		let test_cases: Vec<(Rectangle<u32>, Rectangle<u32>, f32)> = vec![
+			(
+				Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+				Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+				1.0,
+			),
+			(
+				Rectangle::new(Vec2D::new(0, 0), Vec2D::new(3, 1)),
+				Rectangle::new(Vec2D::new(1, 0), Vec2D::new(4, 1)),
+				0.5,
+			),
+			(
+				Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+				Rectangle::new(Vec2D::new(1, 1), Vec2D::new(2, 2)),
+				0.0,
+			),
+		];
+
+		for (rectangle_a, rectangle_b, expected_result) in test_cases {
+			let result = rectangle_a
+				.intersection_over_union(&rectangle_b)
+				.expect("Failed to calculate intersection over union");
+			assert!((result - expected_result).abs() <= f32::EPSILON);
+		}
+	}
+
+	#[test]
+	fn filters_out_colliding_rectangles() {
+		let test_cases: Vec<(Vec<Rectangle<u32>>, usize)> = vec![
+			(
+				vec![
+					Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+					Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+				],
+				1,
+			),
+			(
+				vec![
+					Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+					Rectangle::new(Vec2D::new(1, 1), Vec2D::new(2, 2)),
+				],
+				2,
+			),
+			(
+				vec![
+					Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+					Rectangle::new(Vec2D::new(0, 0), Vec2D::new(1, 1)),
+					Rectangle::new(Vec2D::new(2, 2), Vec2D::new(3, 3)),
+					Rectangle::new(Vec2D::new(2, 2), Vec2D::new(3, 3)),
+				],
+				2,
+			),
+		];
+
+		for (rectangles, expected_len) in test_cases {
+			let mut rectangles = rectangles.clone();
+			Rectangle::filter_out_colliding(&mut rectangles);
+			assert_eq!(rectangles.len(), expected_len);
 		}
 	}
 }

@@ -4,6 +4,8 @@ use crate::camera::Frame;
 use crate::geometry::{Rectangle, Vec2D};
 use burn::tensor::backend::Backend;
 use burn::tensor::{Tensor, TensorData};
+#[cfg(test)]
+use mockall::automock;
 
 /// The size of the image the detector model takes as input
 pub const DETECTOR_INPUT_SIZE: Vec2D<u32> = Vec2D { x: 640, y: 480 };
@@ -15,6 +17,8 @@ pub struct FaceDetector<B: Backend> {
 	model: Model<B>,
 }
 
+#[cfg_attr(test, automock)]
+#[cfg_attr(test, allow(unused))]
 impl<B: Backend> FaceDetector<B> {
 	pub fn new(device: &B::Device) -> Self {
 		Self {
