@@ -9,6 +9,7 @@ mod store;
 use camera::Frame;
 use clap::Parser;
 use config::Config;
+use flexi_logger::{FileSpec, Logger, WriteMode};
 use processors::auth_processor::AuthProcessor;
 use processors::face::{FaceEmbedding, FaceForGUI};
 use processors::face_processor::FaceProcessor;
@@ -18,7 +19,10 @@ use std::process::ExitCode;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self};
-use store::{load_face_embeddings, remove_face_embedding, save_face_embedding};
+use store::{get_log_directory, load_face_embeddings, remove_face_embedding, save_face_embedding};
+
+const LOG_LEVEL: &str = "trace";
+const LOG_FILE_BASE_NAME: &str = "oblichey";
 
 #[derive(PartialEq, Eq, Debug, Clone, clap::Subcommand)]
 enum Command {
@@ -49,6 +53,27 @@ struct Args {
 }
 
 fn main() -> ExitCode {
+	let log_directory = get_log_directory().expect("Failed to get log directory");
+	let log_spec = match Logger::try_with_str(LOG_LEVEL) {
+		Ok(s) => s,
+		Err(e) => {
+			println!("Failed to create log spec: {e}");
+			return ExitCode::FAILURE;
+		}
+	};
+	if let Err(e) = log_spec
+		.log_to_file(
+			FileSpec::default()
+				.basename(LOG_FILE_BASE_NAME)
+				.directory(log_directory),
+		)
+		.write_mode(WriteMode::BufferAndFlush)
+		.start()
+	{
+		println!("Failed to start logger: {e}");
+		return ExitCode::FAILURE;
+	};
+
 	let args = Args::parse();
 	let command = args.command;
 	let config = match Config::load() {

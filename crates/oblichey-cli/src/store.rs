@@ -9,7 +9,7 @@ use std::{
 	path::PathBuf,
 };
 
-const EMBEDDINGS_DIRECTORY: &str = "oblichey";
+const OBLICHEY_DIRECTORY_NAME: &str = "oblichey";
 
 #[derive(Debug)]
 pub enum Error {
@@ -48,7 +48,7 @@ impl From<bincode::Error> for Error {
 
 fn get_embeddings_directory() -> Result<PathBuf, Error> {
 	let state_dir = env::var("XDG_STATE_HOME")?;
-	let embeddings_dir_path = PathBuf::from(state_dir).join(EMBEDDINGS_DIRECTORY);
+	let embeddings_dir_path = PathBuf::from(state_dir).join(OBLICHEY_DIRECTORY_NAME);
 
 	if let Err(e) = create_dir(embeddings_dir_path.clone()) {
 		if e.kind() != io::ErrorKind::AlreadyExists {
@@ -61,6 +61,13 @@ fn get_embeddings_directory() -> Result<PathBuf, Error> {
 
 fn get_face_embedding_file_path(name: &str) -> Result<PathBuf, Error> {
 	Ok(get_embeddings_directory()?.join(name))
+}
+
+pub fn get_log_directory() -> Result<PathBuf, Error> {
+	let cache_dir = env::var("XDG_CACHE_HOME")?;
+	let log_dir_path = PathBuf::from(cache_dir).join(OBLICHEY_DIRECTORY_NAME);
+
+	Ok(log_dir_path)
 }
 
 pub fn save_face_embedding(name: &str, face_embedding: &FaceEmbedding) -> Result<(), Error> {
