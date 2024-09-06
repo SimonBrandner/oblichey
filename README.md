@@ -17,7 +17,9 @@ about [how Oblichey works](/docs/how_does_it_work.md) before using it.
 
 ## Installation
 
-### Using a Nix flake
+### NixOS
+
+#### Using a Nix flake
 
 Add Oblichey to your flake inputs:
 
@@ -58,12 +60,51 @@ Add an `oblichey` entry to `programs`:
   };
 ```
 
-### Other
+And now you are good to go!
 
-Currently, NixOS is the only "officially" supported distribution, but it should
-be possible to compile from source either by using Nix or without it and
-installing manually. I am relatively open to contributions for other packaging
-formats.
+### Other distributions
+
+Install the Nix package manager. It is not to be confused with NixOS. NixOS is
+a whole distribution but we only need the package manager which can be
+installed on any distribution. It is going to manage dependencies for us. It
+can be found [here](https://nixos.org/download/#nix-install-linux).
+
+Enable flakes by following the documentation
+[here](https://nixos.wiki/wiki/Flakes#Enable_flakes_permanently_in_NixOS).
+
+Clone the repo and build the flake.
+
+```sh
+git clone https://github.com/SimonBrandner/oblichey/
+cd oblichey
+nix build
+```
+
+Once the build process has finished, the resulting binary, library and weights
+will be located in `./result/`. You can now add `oblichey-cli` to your `PATH`,
+so that the PAM module can use it. It is recommended to move the build output
+to a more proper place though.
+
+Now, it is necessary to create a configuration file at `/etc/oblichey.toml`
+with the path to your IR camera. It will usually be something like
+`/dev/video2`.
+
+```toml
+[camera]
+path="/path/to/camera"
+```
+
+The last step is to add a PAM rule for Oblichey. You can find the configuration
+for PAM services at `/etc/pam.d/`. For example, one may want to use Oblichey to
+authenticate when using `sudo`, so they would edit `/etc/pam.d/sudo` and add
+the following line. It is important to note that this line should be placed
+above the other `auth` rules, so that it takes precedence.
+
+```
+auth sufficient /path/to/libpam_oblichey.so
+```
+
+And now you are good to go!
 
 ## Usage
 
@@ -73,17 +114,20 @@ everything is fine), and you are good to go.
 
 ## Development
 
-For development you are going to need Nix (the package manager not the OS)
-which is either part of your NixOS install or can be downloaded
-[here](https://nixos.org/download/#nix-install-linux) for other distros. You
-are going to need to [enable
-flakes](https://nixos.wiki/wiki/Flakes#Enable_flakes_permanently_in_NixOS).
+Install the Nix package manager. It is not to be confused with NixOS. NixOS is
+a whole distribution but we only need the package manager which can be
+installed on any distribution. It is going to manage dependencies for us. It
+can be found [here](https://nixos.org/download/#nix-install-linux).
 
-Once you have those installed, you can clone the repo and enter the Nix
-development environment.
+Enable flakes by following the documentation
+[here](https://nixos.wiki/wiki/Flakes#Enable_flakes_permanently_in_NixOS).
+
+Clone the repo and enter the Nix development environment, this is going to
+automagically install all the necessary dependencies.
 
 ```sh
 git clone https://github.com/SimonBrandner/oblichey/
+cd oblichey
 nix develop
 ./scripts/unzip_models.sh
 ```
