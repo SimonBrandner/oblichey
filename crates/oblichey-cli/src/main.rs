@@ -9,7 +9,7 @@ mod store;
 use camera::Frame;
 use clap::Parser;
 use config::Config;
-use flexi_logger::{FileSpec, Logger, WriteMode};
+use flexi_logger::{FileSpec, Logger};
 use processors::auth_processor::AuthProcessor;
 use processors::face::{FaceEmbedding, FaceForGUI};
 use processors::face_processor::FaceProcessor;
@@ -67,12 +67,12 @@ fn main() -> ExitCode {
 				.basename(LOG_FILE_BASE_NAME)
 				.directory(log_directory),
 		)
-		.write_mode(WriteMode::BufferAndFlush)
 		.start()
 	{
 		println!("Failed to start logger: {e}");
 		return ExitCode::FAILURE;
 	};
+	log_panics::init();
 
 	let args = Args::parse();
 	let config = match Config::load() {
