@@ -15,7 +15,7 @@ about [how Oblichey works](/docs/how_does_it_work.md) before using it.
   time of year etc.
 - Contributions are welcome!
 
-## Installation
+## Installation and setup
 
 ### NixOS
 
@@ -64,6 +64,10 @@ And now you are good to go!
 
 ### Other distributions
 
+#### Building
+
+##### Using the Nix package manager
+
 Install the Nix package manager. It is not to be confused with NixOS. NixOS is
 a whole distribution but we only need the package manager which can be
 installed on any distribution. It is going to manage dependencies for us. It
@@ -81,9 +85,30 @@ nix build
 ```
 
 Once the build process has finished, the resulting binary, library and weights
-will be located in `./result/`. You can now add `oblichey-cli` to your `PATH`,
-so that the PAM module can use it. It is recommended to move the build output
-to a more proper place though.
+will be located in `./result/`.
+
+##### Manually (without the Nix package manager)
+
+If you do not want to install Nix and know what you are doing, you can build
+manually. For that you are going to need to take a look at the [`package.nix`
+file](./nix/package.nix) and install the equivalents of the packages listed in
+`nativeBuildInputs` and `buildInputs` for your distribution.
+
+Once that is done you can clone the repo and build using cargo.
+
+```sh
+git clone https://github.com/SimonBrandner/oblichey/
+cd oblichey
+cargo build --release
+```
+
+Once the build process has finished, the resulting binary, library and weights
+will be located in `./target/release/`.
+
+#### Setup
+
+You can now add `oblichey-cli` to your `PATH`, so that the PAM module can use
+it. It is recommended to move the build output to a more proper place though.
 
 Now, it is necessary to create a configuration file at `/etc/oblichey.toml`
 with the path to your IR camera. It will usually be something like
