@@ -4,6 +4,8 @@ pub mod face_processor;
 pub mod frame_processor;
 pub mod scan_processor;
 
+use log::warn;
+
 use self::{face::FaceForGUI, face_processor::FaceProcessor, frame_processor::FrameProcessor};
 use crate::camera::Frame;
 use std::sync::{
@@ -30,6 +32,7 @@ pub fn start(
 			Err(e) => panic!("Failed to get lock: {e}"),
 		};
 		let Some(new_frame) = (*frame_lock).clone() else {
+			warn!("No frame to process");
 			continue;
 		};
 		drop(frame_lock);

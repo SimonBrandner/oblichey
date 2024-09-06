@@ -16,6 +16,7 @@ use eframe::{
 	},
 	EventLoopBuilderHook, NativeOptions,
 };
+use log::{trace, warn};
 use std::{
 	fmt::Display,
 	sync::{
@@ -55,6 +56,8 @@ pub fn start(
 	faces: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
 ) {
+	trace!("Creating GUI");
+
 	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
 		wayland::EventLoopBuilderExtWayland::with_any_thread(event_loop_builder, true);
 		x11::EventLoopBuilderExtX11::with_any_thread(event_loop_builder, true);
@@ -179,6 +182,7 @@ impl Gui {
 impl eframe::App for Gui {
 	fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
 		if self.finished.load(Ordering::SeqCst) {
+			trace!("Sending viewport command to close window");
 			ctx.send_viewport_cmd(egui::ViewportCommand::Close);
 			return;
 		}
@@ -188,6 +192,7 @@ impl eframe::App for Gui {
 			Err(e) => panic!("Failed to get lock: {e}"),
 		};
 		let Some(image) = frame_lock.clone() else {
+			warn!("Do not have a frame to render");
 			ctx.request_repaint();
 			return;
 		};

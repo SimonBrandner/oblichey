@@ -2,6 +2,7 @@ mod utils;
 
 use crate::geometry::Vec2D;
 use image::{ImageBuffer, ImageError, Rgb};
+use log::{error, trace, warn};
 use std::fmt::Display;
 use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -78,6 +79,8 @@ impl Camera {
 	///
 	/// This is going to panic if a supported output pixel format cannot be found
 	pub fn new(camera_path: &str) -> Result<Self, Error> {
+		trace!("Creating Camera");
+
 		let device = Device::with_path(camera_path)?;
 		let mut format = device.format()?;
 		let frame_size = Vec2D::new(format.width, format.height);
@@ -95,6 +98,9 @@ impl Camera {
 		let Some(pixel_format) = chosen_pixel_format else {
 			return Err(Error::CannotSetFormat);
 		};
+
+		trace!("Chosen camera format: {format:?}");
+
 		#[cfg(not(feature = "rgb-webcam"))]
 		assert_eq!(
 			pixel_format,
@@ -132,6 +138,8 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>, came
 		let new_frame = match camera.get_frame() {
 			Ok(f) => f,
 			Err(e) => {
+				error!("Failed to get frame: {e}");
+
 				failed_frames_in_row += 1;
 				assert!(
 					failed_frames_in_row < MAX_FAILED_FRAMES_IN_ROW,

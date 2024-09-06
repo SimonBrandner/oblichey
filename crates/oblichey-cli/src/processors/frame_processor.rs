@@ -9,6 +9,7 @@ use crate::{
 };
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use image::imageops::{crop, resize, FilterType};
+use log::trace;
 use mockall_double::double;
 
 type Backend = Wgpu<f32, i32>;
@@ -77,6 +78,7 @@ impl FrameProcessor {
 					let face = self.recognizer.forward(&face_image);
 					Ok(face)
 				} else {
+					trace!("Detected face too small");
 					Err(FaceRecognitionError::TooSmall)
 				},
 			});

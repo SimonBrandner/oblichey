@@ -11,6 +11,7 @@ use camera::Frame;
 use clap::Parser;
 use config::Config;
 use flexi_logger::{FileSpec, Logger};
+use log::trace;
 use processors::auth_processor::AuthProcessor;
 use processors::face::{FaceEmbedding, FaceForGUI};
 use processors::face_processor::FaceProcessor;
@@ -99,6 +100,8 @@ fn handle_command(
 	config: &Config,
 	face_embeddings: HashMap<String, FaceEmbedding>,
 ) -> ExitCode {
+	trace!("Handling command: {command:?}");
+
 	match command {
 		Command::Remove { name } => {
 			if !face_embeddings.contains_key(&name) {
@@ -186,6 +189,8 @@ fn start_threads(
 	config: &Config,
 	gui: bool,
 ) {
+	trace!("Starting threads");
+
 	let frame: Arc<Mutex<Option<Frame>>> = Arc::new(Mutex::new(None));
 	let faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>> = Arc::new(Mutex::new(Vec::new()));
 	let finished: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
