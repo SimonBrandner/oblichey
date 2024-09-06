@@ -75,7 +75,6 @@ fn main() -> ExitCode {
 	};
 
 	let args = Args::parse();
-	let command = args.command;
 	let config = match Config::load() {
 		Ok(c) => c,
 		Err(e) => {
@@ -91,7 +90,7 @@ fn main() -> ExitCode {
 		}
 	};
 
-	handle_command(command, &config, face_embeddings)
+	handle_command(args.command, &config, face_embeddings)
 }
 
 fn handle_command(
