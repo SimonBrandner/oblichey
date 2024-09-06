@@ -1,4 +1,4 @@
-use crate::processors::face::FaceEmbedding;
+use crate::{log_and_print_warn, processors::face::FaceEmbedding};
 use bincode::{deserialize, serialize};
 use std::{
 	collections::HashMap,
@@ -94,12 +94,12 @@ pub fn load_face_embeddings() -> Result<HashMap<String, FaceEmbedding>, Error> {
 		let file = match file {
 			Ok(f) => f,
 			Err(e) => {
-				println!("Failed to get file - skipping: {e}");
+				log_and_print_warn!("Failed to get file - skipping: {e}");
 				continue;
 			}
 		};
 		let Ok(name) = file.file_name().into_string() else {
-			println!("File name contains invalid unicode - skipping");
+			log_and_print_warn!("File name contains invalid unicode - skipping");
 			continue;
 		};
 		let serialized = fs::read(file.path())?;

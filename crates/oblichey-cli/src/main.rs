@@ -2,6 +2,7 @@ mod camera;
 mod config;
 mod geometry;
 mod gui;
+mod logging;
 mod models;
 mod processors;
 mod store;
@@ -78,14 +79,14 @@ fn main() -> ExitCode {
 	let config = match Config::load() {
 		Ok(c) => c,
 		Err(e) => {
-			println!("Failed load config: {e}");
+			log_and_print_error!("Failed to load config: {e}");
 			return ExitCode::FAILURE;
 		}
 	};
 	let face_embeddings = match load_face_embeddings() {
 		Ok(e) => e,
 		Err(e) => {
-			println!("Failed to load face scans: {e}");
+			log_and_print_error!("Failed to load face scans: {e}");
 			return ExitCode::FAILURE;
 		}
 	};
@@ -101,11 +102,11 @@ fn handle_command(
 	match command {
 		Command::Remove { name } => {
 			if !face_embeddings.contains_key(&name) {
-				println!("Face scan of this name does not exist.");
+				log_and_print_error!("Face scan of this name does not exist.");
 				return ExitCode::FAILURE;
 			}
 			if let Err(e) = remove_face_embedding(&name) {
-				println!("Failed remove face scan: {e}");
+				log_and_print_error!("Failed remove face scan: {e}");
 				return ExitCode::FAILURE;
 			}
 		}
@@ -120,7 +121,7 @@ fn handle_command(
 		}
 		Command::Auth => {
 			if face_embeddings.is_empty() {
-				println!("No faces have been scanned yet");
+				log_and_print_error!("No faces have been scanned yet");
 				return ExitCode::FAILURE;
 			}
 			let auth_processor = Arc::new(Mutex::new(AuthProcessor::new(face_embeddings, false)));
@@ -129,10 +130,14 @@ fn handle_command(
 
 			let auth_processor_lock = match auth_processor.lock() {
 				Ok(l) => l,
-				Err(e) => panic!("Failed to get lock: {e}"),
+				Err(e) => {
+					log_and_print_error!("Failed to get lock: {e}");
+					return ExitCode::FAILURE;
+				}
 			};
 			let Some(result) = auth_processor_lock.get_result() else {
-				panic!("Getting auth result failed - this should never happen!")
+				log_and_print_error!("Getting auth result failed - this should never happen!");
+				return ExitCode::FAILURE;
 			};
 			drop(auth_processor_lock);
 			if result.authenticated {
@@ -144,7 +149,7 @@ fn handle_command(
 		}
 		Command::Scan { name } => {
 			if face_embeddings.contains_key(&name) {
-				println!("Face of this name already exists. Either pick a different name or remove the existing face.");
+				log_and_print_error!("Face of this name already exists. Either pick a different name or remove the existing face.");
 				return ExitCode::FAILURE;
 			}
 
@@ -152,15 +157,19 @@ fn handle_command(
 			start_threads(scan_processor.clone(), config, true);
 			let scan_processor_lock = match scan_processor.lock() {
 				Ok(l) => l,
-				Err(e) => panic!("Failed to get lock: {e}"),
+				Err(e) => {
+					log_and_print_error!("Failed to get lock: {e}");
+					return ExitCode::FAILURE;
+				}
 			};
 			let Some(result) = scan_processor_lock.get_result() else {
-				panic!("Getting auth result failed - this should never happen!")
+				log_and_print_error!("Getting auth result failed - this should never happen!");
+				return ExitCode::FAILURE;
 			};
 
 			drop(scan_processor_lock);
 			if let Err(e) = save_face_embedding(&name, &result.face_embedding) {
-				println!("Failed to save face scan: {e}");
+				log_and_print_error!("Failed to save face scan: {e}");
 				return ExitCode::FAILURE;
 			};
 			println!("Face scan was successful!");
