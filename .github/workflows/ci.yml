@@ -16,6 +16,8 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - run: nix flake check
       - run: nix develop --command cargo fmt -- --check
-      - run: nix develop --command cargo clippy
-      - run: nix develop --command cargo test
+      - run: |
+          nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo clippy"
+      - run: |
+          nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo test"
       - run: nix build
