@@ -2,7 +2,7 @@ mod utils;
 
 use crate::geometry::Vec2D;
 use image::{ImageBuffer, ImageError, Rgb};
-use log::{error, trace, warn};
+use log::{error, trace};
 use std::fmt::Display;
 use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
