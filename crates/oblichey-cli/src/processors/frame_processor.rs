@@ -12,7 +12,7 @@ use image::imageops::{crop, resize, FilterType};
 use log::trace;
 use mockall_double::double;
 
-type Backend = Wgpu<f32, i32>;
+pub type BurnBackend = Wgpu<f32, i32>;
 
 /// Checks whether a `Rectangle` is large enough to be passed into the recognizer model. We would
 /// not want to pass an upscaled image to it
@@ -50,8 +50,8 @@ fn get_face_image(frame: &mut Frame, face_rectangle: &Rectangle<u32>) -> Frame {
 
 #[derive(Debug)]
 pub struct FrameProcessor {
-	detector: FaceDetector<Backend>,
-	recognizer: FaceRecognizer<Backend>,
+	detector: FaceDetector<BurnBackend>,
+	recognizer: FaceRecognizer<BurnBackend>,
 }
 
 impl FrameProcessor {

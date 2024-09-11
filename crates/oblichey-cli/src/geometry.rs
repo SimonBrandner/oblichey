@@ -97,7 +97,7 @@ impl<T: Vec2DNumber + Neg<Output = T>> Neg for Vec2D<T> {
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rectangle<T: Vec2DNumber> {
 	pub min: Vec2D<T>,
 	pub max: Vec2D<T>,

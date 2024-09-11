@@ -18,7 +18,7 @@ pub type FaceEmbeddingData = [f32; EMBEDDING_LENGTH];
 
 /// This is a struct for working with the face embedding. It supports several useful operations
 #[serde_as]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct FaceEmbedding {
 	#[serde_as(as = "[_; EMBEDDING_LENGTH]")]
 	data: FaceEmbeddingData,
