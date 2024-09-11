@@ -8,6 +8,11 @@ edition.workspace = true
 burn-import = { git = "https://github.com/tracel-ai/burn", rev = "f7639bd35a1120fccc849dcb94fbab162df7103a" }
 merkle_hash = "3.7.0"
 
+[dev-dependencies]
+burn = { git = "https://github.com/tracel-ai/burn", rev = "f7639bd35a1120fccc849dcb94fbab162df7103a", features = [
+  "ndarray",
+] }
+
 [dependencies]
 v4l = "0.14.0"
 chrono = "0.4.38"

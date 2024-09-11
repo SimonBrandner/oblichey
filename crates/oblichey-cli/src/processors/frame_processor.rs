@@ -7,12 +7,18 @@ use crate::{
 	camera::Frame, geometry::Rectangle, models::recognizer::RECOGNIZER_INPUT_SIZE,
 	processors::face::FaceRecognitionError,
 };
+#[cfg(test)]
+use burn::backend::{ndarray::NdArrayDevice, NdArray};
+#[cfg(not(test))]
 use burn::backend::{wgpu::WgpuDevice, Wgpu};
 use image::imageops::{crop, resize, FilterType};
 use log::trace;
 use mockall_double::double;
 
+#[cfg(not(test))]
 pub type BurnBackend = Wgpu<f32, i32>;
+#[cfg(test)]
+pub type BurnBackend = NdArray<f32>;
 
 /// Checks whether a `Rectangle` is large enough to be passed into the recognizer model. We would
 /// not want to pass an upscaled image to it
@@ -56,7 +62,10 @@ pub struct FrameProcessor {
 
 impl FrameProcessor {
 	pub fn new() -> Self {
+		#[cfg(not(test))]
 		let device = WgpuDevice::default();
+		#[cfg(test)]
+		let device = NdArrayDevice::default();
 
 		Self {
 			detector: FaceDetector::new(&device),

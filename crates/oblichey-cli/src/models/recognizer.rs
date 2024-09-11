@@ -78,3 +78,129 @@ impl<B: Backend> FaceRecognizer<B> {
 		FaceRecognitionData { embedding }
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::{FaceRecognizer, RECOGNIZER_INPUT_SIZE};
+	use crate::{
+		camera::Frame,
+		processors::{
+			face::{FaceEmbedding, EMBEDDING_LENGTH},
+			frame_processor::BurnBackend,
+		},
+	};
+	use burn::{
+		backend::{ndarray::NdArrayDevice, NdArray},
+		tensor::{Tensor, TensorData},
+	};
+	use image::ImageBuffer;
+
+	const FRAME_CHANNEL_SIZE: usize = (RECOGNIZER_INPUT_SIZE.x * RECOGNIZER_INPUT_SIZE.y) as usize;
+	const FRAME_VEC_SIZE: usize = FRAME_CHANNEL_SIZE * 3;
+
+	fn get_device() -> NdArrayDevice {
+		NdArrayDevice::default()
+	}
+
+	fn get_face_recognizer() -> FaceRecognizer<NdArray<f32>> {
+		FaceRecognizer::new(&get_device())
+	}
+
+	fn get_frame(data: Vec<u8>) -> Frame {
+		ImageBuffer::from_vec(RECOGNIZER_INPUT_SIZE.x, RECOGNIZER_INPUT_SIZE.y, data)
+			.expect("Failed to construct frame")
+	}
+
+	fn check_channel(channel: &[f32], expected_value: f32) {
+		let mut current_expected_value: f32 = 0.0;
+		for (index, v) in channel.iter().enumerate() {
+			// Change expectation at the end of a row
+			if index as u32 % RECOGNIZER_INPUT_SIZE.x == 0 {
+				current_expected_value =
+					if (current_expected_value - expected_value).abs() < f32::EPSILON {
+						0.0
+					} else {
+						expected_value
+					}
+			}
+
+			println!("{v}");
+
+			assert!((*v - current_expected_value).abs() < f32::EPSILON);
+		}
+	}
+
+	#[test]
+	fn normalizes_input_between_values() {
+		let face_recognizer = get_face_recognizer();
+		let test_cases = vec![
+			(vec![255; FRAME_VEC_SIZE], 1.0),
+			(vec![191; FRAME_VEC_SIZE], 0.5),
+			(vec![63; FRAME_VEC_SIZE], -0.5),
+		];
+
+		for (frame_data, expected_result) in test_cases {
+			let frame = get_frame(frame_data);
+
+			let normalized = face_recognizer.normalize_input(&frame);
+			let vector = normalized.to_data().to_vec::<f32>().expect("Failed");
+
+			for element in vector {
+				assert!((element - expected_result).abs() < f32::EPSILON);
+			}
+		}
+	}
+
+	#[test]
+	fn permutes_dimensions_during_normalization() {
+		#[allow(clippy::identity_op, clippy::erasing_op)]
+		let zero = 0 * 128 + 127; // This will become 0 after normalization
+		let zero_value_by_channel = vec![zero; 3]; // This will normalize to [0.0, 0.0, 0.0]
+		let value_by_channel = vec![159, 191, 255]; // This will normalize to [0.25, 0.5, 1.0]
+		let value_by_channel_normalized: Vec<f32> = value_by_channel
+			.iter()
+			.map(|&value| (value as f32 - 127.0) / 128.0)
+			.collect();
+		let frame_data = {
+			let mut data = vec![];
+			for i in 0..RECOGNIZER_INPUT_SIZE.y {
+				for _ in 0..RECOGNIZER_INPUT_SIZE.x {
+					data.extend(if i % 2 == 0 {
+						value_by_channel.clone()
+					} else {
+						zero_value_by_channel.clone()
+					});
+				}
+			}
+			data
+		};
+		let face_recognizer = get_face_recognizer();
+		let frame = get_frame(frame_data);
+		let normalized = face_recognizer.normalize_input(&frame);
+		let vector = normalized.to_data().to_vec::<f32>().expect("Failed");
+
+		for (index, value) in value_by_channel_normalized.iter().enumerate() {
+			let channel = &vector[FRAME_CHANNEL_SIZE * index..FRAME_CHANNEL_SIZE * (index + 1)];
+			check_channel(channel, *value);
+		}
+	}
+
+	#[test]
+	fn interprets_output() {
+		let device = get_device();
+		let test_cases = vec![
+			[0.0; EMBEDDING_LENGTH],
+			[128.0; EMBEDDING_LENGTH],
+			[255.0; EMBEDDING_LENGTH],
+		];
+
+		for test_case in test_cases {
+			let expected_result = FaceEmbedding::new(&test_case);
+			let output: Tensor<BurnBackend, 2> =
+				Tensor::from_data(TensorData::new(test_case.to_vec(), [512, 1]), &device);
+			let result = FaceRecognizer::interpret_output(&output).embedding;
+
+			assert_eq!(result, expected_result);
+		}
+	}
+}
