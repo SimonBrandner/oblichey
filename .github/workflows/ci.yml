@@ -8,16 +8,17 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+      # Prepare
       - uses: actions/checkout@v4
-      - name: Unzip models
-        run: ./scripts/unzip_models.sh
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v30
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: rm -rf /home/runner/.cargo # This needs to be done to avoid clashes with Nix
+
+      # Check and build
+      - run: ./scripts/unzip_models.sh
       - run: nix flake check
-      - run: nix develop --command cargo fmt -- --check
-      - run: |
-          nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo clippy"
-      - run: |
-          nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo test"
+      - run: nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo fmt -- --check"
+      - run: nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo clippy"
+      - run: nix develop --command bash -c "export RUSTFLAGS='-D warnings' && cargo test"
       - run: nix build

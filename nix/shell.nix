@@ -6,6 +6,9 @@ pkgs.mkShell rec {
     pkg-config
     libxkbcommon
     libGL
+    cargo
+    clippy
+    rustfmt
 
     wayland
 

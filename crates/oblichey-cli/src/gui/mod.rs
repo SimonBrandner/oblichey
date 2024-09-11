@@ -90,7 +90,7 @@ struct Gui {
 }
 
 impl Gui {
-	pub fn new(
+	pub const fn new(
 		frame: Arc<Mutex<Option<Frame>>>,
 		faces: Arc<Mutex<Vec<FaceForGUI>>>,
 		finished: Arc<AtomicBool>,

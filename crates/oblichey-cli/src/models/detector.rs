@@ -215,7 +215,7 @@ mod tests {
 	fn interprets_output() {
 		fn create_confidences_tensor(
 			confidences: &[f32],
-			device: &NdArrayDevice,
+			device: NdArrayDevice,
 		) -> Tensor<BurnBackend, 3> {
 			let tensor_data_vec: Vec<f32> = confidences
 				.iter()
@@ -224,12 +224,12 @@ mod tests {
 
 			Tensor::from_data(
 				TensorData::new(tensor_data_vec.clone(), [tensor_data_vec.len(), 1, 1]),
-				device,
+				&device,
 			)
 		}
 		fn create_rectangles_tensor(
 			rectangles: &[Rectangle<u32>],
-			device: &NdArrayDevice,
+			device: NdArrayDevice,
 		) -> Tensor<BurnBackend, 3> {
 			let tensor_data_vec: Vec<f32> = rectangles
 				.iter()
@@ -245,7 +245,7 @@ mod tests {
 
 			Tensor::from_data(
 				TensorData::new(tensor_data_vec.clone(), [tensor_data_vec.len(), 1, 1]),
-				device,
+				&device,
 			)
 		}
 
@@ -270,8 +270,8 @@ mod tests {
 		];
 
 		for (confidences, rectangles) in test_cases {
-			let confidences_tensor = create_confidences_tensor(&confidences, &device);
-			let rectangles_tensor = create_rectangles_tensor(&rectangles, &device);
+			let confidences_tensor = create_confidences_tensor(&confidences, device);
+			let rectangles_tensor = create_rectangles_tensor(&rectangles, device);
 			let valid_rectangle_count = confidences.iter().fold(0, |count, confidence| {
 				if *confidence > CONFIDENCE_THRESHOLD {
 					count + 1
