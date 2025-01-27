@@ -3,7 +3,7 @@ macro_rules! log_and_print_error {
 	($($arg:tt)*) => {
 		let text = format!($($arg)*);
 		log::error!("{}", text);
-		println!("{}", text);
+		eprintln!("{}", text);
 	};
 }
 

@@ -27,7 +27,7 @@ impl PamHooks for OblicheyPamModule {
 						println!("Failed to print stdout: {e}");
 					};
 					if let Err(e) = io::stderr().write_all(&o.stderr) {
-						println!("Failed to print stderr: {e}");
+						eprintln!("Failed to print stderr: {e}");
 					};
 
 					println!("Face recognition unsuccessful");
@@ -35,7 +35,7 @@ impl PamHooks for OblicheyPamModule {
 				}
 			}
 			Err(e) => {
-				println!("Running face recognition failed: {e}");
+				eprintln!("Running face recognition failed: {e}");
 				PamResultCode::PAM_AUTH_ERR
 			}
 		}

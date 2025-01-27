@@ -59,7 +59,7 @@ fn main() -> ExitCode {
 	let log_spec = match Logger::try_with_str(LOG_LEVEL) {
 		Ok(s) => s,
 		Err(e) => {
-			println!("Failed to create log spec: {e}");
+			eprintln!("Failed to create log spec: {e}");
 			return ExitCode::FAILURE;
 		}
 	};
@@ -71,7 +71,7 @@ fn main() -> ExitCode {
 		)
 		.start()
 	{
-		println!("Failed to start logger: {e}");
+		eprintln!("Failed to start logger: {e}");
 		return ExitCode::FAILURE;
 	};
 	log_panics::init();
