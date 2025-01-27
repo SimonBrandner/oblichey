@@ -139,7 +139,7 @@ fn handle_command(
 				}
 			};
 			let Some(result) = auth_processor_lock.get_result() else {
-				log_and_print_error!("Getting auth result failed - this should never happen!");
+				log_and_print_error!("Getting auth result failed!");
 				return ExitCode::FAILURE;
 			};
 			drop(auth_processor_lock);
