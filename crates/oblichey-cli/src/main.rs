@@ -191,6 +191,8 @@ fn start_threads(
 ) {
 	trace!("Starting threads");
 
+	let mut thread_handles = Vec::new();
+
 	let frame: Arc<Mutex<Option<Frame>>> = Arc::new(Mutex::new(None));
 	let faces_for_gui: Arc<Mutex<Vec<FaceForGUI>>> = Arc::new(Mutex::new(Vec::new()));
 	let finished: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
@@ -198,40 +200,48 @@ fn start_threads(
 	let frame_clone = frame.clone();
 	let finished_clone = finished.clone();
 	let camera_path_clone = config.camera.path.clone();
-	let camera_thread =
-		thread::spawn(move || camera::start(&frame_clone, &finished_clone, &camera_path_clone));
+	thread_handles.push(thread::spawn(move || {
+		camera::start(&frame_clone, &finished_clone, &camera_path_clone);
+	}));
 
 	let faces_for_gui_clone = faces_for_gui.clone();
 	let finished_clone = finished.clone();
 	let frame_clone = frame.clone();
-	let processing_thread = thread::spawn(move || {
+	thread_handles.push(thread::spawn(move || {
 		processors::start(
 			&frame_clone,
 			&faces_for_gui_clone,
 			&finished_clone,
 			&face_processor,
 		);
-	});
+	}));
 
-	let gui_thread = gui.then(|| {
+	if gui {
 		let finished_clone = finished.clone();
-		thread::spawn(move || {
+		thread_handles.push(thread::spawn(move || {
 			gui::start(frame, faces_for_gui, finished_clone);
-		})
-	});
+		}));
+	}
 
+	// Wait for any thread to finish
 	loop {
-		let camera_finished = camera_thread.is_finished();
-		let processing_finished = processing_thread.is_finished();
-		let gui_finished = gui_thread
-			.as_ref()
-			.map_or(true, thread::JoinHandle::is_finished);
-
-		if camera_finished || processing_finished || (gui_finished && gui_thread.is_some()) {
+		if thread_handles
+			.iter()
+			.any(std::thread::JoinHandle::is_finished)
+		{
 			finished.store(true, Ordering::SeqCst);
-		}
-		if camera_finished && processing_finished && gui_finished {
 			break;
+		}
+	}
+
+	// Join all threads and print any errors
+	for thread_handle in thread_handles {
+		if let Err(e) = thread_handle.join() {
+			if let Some(panic_msg) = e.downcast_ref::<String>() {
+				println!("{panic_msg}");
+			} else {
+				println!("Thread panicked but with an unknown error");
+			}
 		}
 	}
 }

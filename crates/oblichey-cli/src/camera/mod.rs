@@ -44,6 +44,7 @@ pub enum Error {
 	Io(io::Error),
 	Image(ImageError),
 	CannotSetFormat,
+	OnlyGrayScaleSupported,
 }
 
 impl From<io::Error> for Error {
@@ -62,8 +63,9 @@ impl Display for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Io(e) => write!(f, "IO error: {e}"),
-			Self::CannotSetFormat => write!(f, "Failed to set desired format"),
 			Self::Image(e) => write!(f, "Image error: {e}"),
+			Self::CannotSetFormat => write!(f, "Failed to set desired format"),
+			Self::OnlyGrayScaleSupported => write!(f, "Only gray scale cameras are supported"),
 		}
 	}
 }
@@ -99,14 +101,10 @@ impl Camera {
 			return Err(Error::CannotSetFormat);
 		};
 
-		trace!("Chosen camera format: {format:?}");
-
 		#[cfg(not(feature = "rgb-webcam"))]
-		assert_eq!(
-			pixel_format,
-			SupportedPixelFormat::Gray,
-			"Your camera does not appear to be support IR!"
-		);
+		if pixel_format != SupportedPixelFormat::Gray {
+			return Err(Error::OnlyGrayScaleSupported);
+		}
 
 		Ok(Self {
 			stream: Stream::with_buffers(&device, Type::VideoCapture, 4)?,
