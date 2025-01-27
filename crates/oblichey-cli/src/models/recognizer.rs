@@ -124,8 +124,6 @@ mod tests {
 					}
 			}
 
-			println!("{v}");
-
 			assert!((*v - current_expected_value).abs() < f32::EPSILON);
 		}
 	}
