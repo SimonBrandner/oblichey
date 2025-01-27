@@ -19,12 +19,12 @@ pub fn start(
 	faces_for_gui: &Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: &Arc<AtomicBool>,
 	face_processor: &Arc<Mutex<dyn FaceProcessor + Send + Sync>>,
-) {
+) -> Result<(), String> {
 	let frame_processor = FrameProcessor::new();
 
 	loop {
 		if finished.load(Ordering::SeqCst) {
-			return;
+			return Ok(());
 		}
 
 		let frame_lock = match frame.lock() {
@@ -44,7 +44,7 @@ pub fn start(
 		};
 		let new_faces_for_gui = face_processor_lock.process_faces(faces_for_processing);
 		if face_processor_lock.is_finished() {
-			return;
+			return Ok(());
 		}
 		drop(face_processor_lock);
 

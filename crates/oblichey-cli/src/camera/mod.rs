@@ -18,7 +18,7 @@ use v4l::{Device, FourCC};
 
 /// Some (at least mine) IR cameras occasionally produce very dark frames which we ignore
 const MAX_BRIGHTNESS_DECREASE: f32 = 24.0;
-/// How many times we are allowed to fail getting a frame before we panic
+/// How many times we are allowed to fail getting a frame before we return an error
 const MAX_FAILED_FRAMES_IN_ROW: u8 = 10;
 
 /// The type of a frame coming from the camera
@@ -79,7 +79,7 @@ pub struct Camera {
 impl Camera {
 	/// Creates a new Camera which can be used to get frames from the given device.
 	///
-	/// This is going to panic if a supported output pixel format cannot be found
+	/// This is going to return an error if a supported output pixel format cannot be found
 	pub fn new(camera_path: &str) -> Result<Self, Error> {
 		trace!("Creating Camera");
 
@@ -120,17 +120,20 @@ impl Camera {
 }
 
 /// Starts the camera loop
-pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>, camera_path: &str) {
+pub fn start(
+	frame: &Arc<Mutex<Option<Frame>>>,
+	finished: &Arc<AtomicBool>,
+	camera_path: &str,
+) -> Result<(), String> {
 	let mut camera = match Camera::new(camera_path) {
 		Ok(c) => c,
-		Err(e) => panic!("Failed construct camera: {e}"),
+		Err(e) => return Err(format!("Failed to create camera: {e}")),
 	};
-
 	let mut failed_frames_in_row = 0;
 	let mut last_brightness = 255.0;
 	loop {
 		if finished.load(Ordering::SeqCst) {
-			return;
+			return Ok(());
 		}
 
 		let new_frame = match camera.get_frame() {
@@ -139,10 +142,9 @@ pub fn start(frame: &Arc<Mutex<Option<Frame>>>, finished: &Arc<AtomicBool>, came
 				error!("Failed to get frame: {e}");
 
 				failed_frames_in_row += 1;
-				assert!(
-					failed_frames_in_row < MAX_FAILED_FRAMES_IN_ROW,
-					"Failed to get {MAX_FAILED_FRAMES_IN_ROW} frames in row: {e}"
-				);
+				if failed_frames_in_row < MAX_FAILED_FRAMES_IN_ROW {
+					return Err(String::from("Failed to get too many frames in a row"));
+				}
 				continue;
 			}
 		};

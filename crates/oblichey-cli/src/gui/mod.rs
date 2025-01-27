@@ -55,7 +55,7 @@ pub fn start(
 	frame: Arc<Mutex<Option<Frame>>>,
 	faces: Arc<Mutex<Vec<FaceForGUI>>>,
 	finished: Arc<AtomicBool>,
-) {
+) -> Result<(), String> {
 	trace!("Creating GUI");
 
 	let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
@@ -79,8 +79,10 @@ pub fn start(
 		},
 		Box::new(|_| Ok(Box::new(Gui::new(frame, faces, finished)))),
 	) {
-		panic!("Running eframe failed: {e}");
+		return Err(format!("Running eframe failed: {e}"));
 	};
+
+	Ok(())
 }
 
 struct Gui {

@@ -201,7 +201,7 @@ fn start_threads(
 	let finished_clone = finished.clone();
 	let camera_path_clone = config.camera.path.clone();
 	thread_handles.push(thread::spawn(move || {
-		camera::start(&frame_clone, &finished_clone, &camera_path_clone);
+		camera::start(&frame_clone, &finished_clone, &camera_path_clone)
 	}));
 
 	let faces_for_gui_clone = faces_for_gui.clone();
@@ -213,13 +213,13 @@ fn start_threads(
 			&faces_for_gui_clone,
 			&finished_clone,
 			&face_processor,
-		);
+		)
 	}));
 
 	if gui {
 		let finished_clone = finished.clone();
 		thread_handles.push(thread::spawn(move || {
-			gui::start(frame, faces_for_gui, finished_clone);
+			gui::start(frame, faces_for_gui, finished_clone)
 		}));
 	}
 
@@ -236,11 +236,17 @@ fn start_threads(
 
 	// Join all threads and print any errors
 	for thread_handle in thread_handles {
-		if let Err(e) = thread_handle.join() {
-			if let Some(panic_msg) = e.downcast_ref::<String>() {
-				println!("{panic_msg}");
-			} else {
-				println!("Thread panicked but with an unknown error");
+		match thread_handle.join() {
+			Ok(Ok(())) => (),
+			Ok(Err(e)) => {
+				log_and_print_error!("Thread returned an error: {e}");
+			}
+			Err(e) => {
+				if let Some(panic_msg) = e.downcast_ref::<String>() {
+					log_and_print_error!("Thread panicked: {panic_msg}");
+				} else {
+					log_and_print_error!("Thread panicked but with an unknown error");
+				}
 			}
 		}
 	}
