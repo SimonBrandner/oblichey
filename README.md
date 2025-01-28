@@ -6,6 +6,7 @@ about [how Oblichey works](/docs/how_does_it_work.md) before using it.
 
 ## Notes/disclaimers
 
+- Oblichey can generate false positives!
 - You need a device with an infrared (IR) webcam.
 - At the very least until https://github.com/SimonBrandner/oblichey/issues/6 is
   solved, this can be fooled with a printed photo.
